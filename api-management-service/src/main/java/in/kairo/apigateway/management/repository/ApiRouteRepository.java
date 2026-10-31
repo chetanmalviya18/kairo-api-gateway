@@ -1,4 +1,17 @@
 package in.kairo.apigateway.management.repository;
 
-public @interface ApiRouteRepository {
+import in.kairo.apigateway.management.entity.ApiRoute;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface ApiRouteRepository extends JpaRepository<ApiRoute, Long> {
+    boolean existsByOrganizationIdAndRouteId(Long organizationId, String routeId);
+
+     List<ApiRoute> findAllByOrganizationId(Long id);
+
+    Optional<ApiRoute> findByIdAndOrganizationId(Long id, Long organizationId);
 }
+
+
