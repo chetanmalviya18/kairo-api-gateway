@@ -18,8 +18,8 @@ public class HeaderRuleResponse {
                 routeHeaderRule.getId(),
                 routeHeaderRule.getDirection(),
                 routeHeaderRule.getAction(),
-                routeHeaderRule.getHeader_name(),
-                routeHeaderRule.getHeader_value()
+                routeHeaderRule.getHeaderName(),
+                routeHeaderRule.getHeaderValue()
         );
     }
 }

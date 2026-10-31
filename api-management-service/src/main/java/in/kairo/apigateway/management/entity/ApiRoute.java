@@ -43,6 +43,6 @@ public class ApiRoute {
     @Column(name = "http_method")
     private Set<String> allowedMethods = new HashSet<>();
 
-    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "apiRoute", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RouteHeaderRule> routeHeaderRules = new ArrayList<RouteHeaderRule>();
 }

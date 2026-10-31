@@ -62,7 +62,7 @@ public class RouteService {
         return RouteResponse.from(getTenantRoute(id, organization.getId()));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public RouteResponse update(Long id, RouteRequest routeRequest) {
         long startedAt = System.nanoTime();
 
@@ -79,6 +79,7 @@ public class RouteService {
 
         apply(apiRoute, routeRequest);
 
+
         return RouteResponse.from(apiRoute);
     }
 
@@ -94,6 +95,18 @@ public class RouteService {
         apiRoute.setUpdatedAt(LocalDateTime.now());
 
         return RouteResponse.from(apiRoute);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        long startedAt = System.nanoTime();
+
+        Organization organization = tenantContext.getTenantOrganization();
+        ApiRoute apiRoute = getTenantRoute(id, organization.getId());
+        apiRoute.setConfigurationVersion(apiRoute.getConfigurationVersion() + 1);
+        apiRoute.setUpdatedAt(LocalDateTime.now());
+
+        apiRouteRepository.delete(apiRoute);
     }
 
     private ApiRoute getTenantRoute(Long id, Long organizationId) {
@@ -122,18 +135,26 @@ public class RouteService {
         apiRoute.setUpdatedAt(LocalDateTime.now());
         apiRoute.setAllowedMethods(normalizeMethods(routeRequest.getAllowedMethods()));
 
-//        routeRequest.getHeaderRules().clear();
-        for(HeaderRuleRequest ruleRequest : routeRequest.getHeaderRules()) {
-            RouteHeaderRule routeHeaderRule = new RouteHeaderRule();
-
-            routeHeaderRule.setApiRoute(apiRoute);
-            routeHeaderRule.setDirection(ruleRequest.getDirection().toUpperCase(Locale.ENGLISH));
-            routeHeaderRule.setAction(ruleRequest.getAction());
-            routeHeaderRule.setHeaderName(ruleRequest.getHeaderName());
-            routeHeaderRule.setHeaderValue(ruleRequest.getHeaderValue());
-            routeHeaderRule.setCreatedAt(LocalDateTime.now());
-            routeHeaderRule.setUpdatedAt(LocalDateTime.now());
+        if (apiRoute.getRouteHeaderRules() == null) {
+            apiRoute.setRouteHeaderRules(new ArrayList<>());
         }
+
+        if(routeRequest.getHeaderRules() != null) {
+            for(HeaderRuleRequest ruleRequest : routeRequest.getHeaderRules()) {
+                RouteHeaderRule routeHeaderRule = new RouteHeaderRule();
+
+                routeHeaderRule.setApiRoute(apiRoute);
+                routeHeaderRule.setDirection(ruleRequest.getDirection().toUpperCase(Locale.ENGLISH));
+                routeHeaderRule.setAction(ruleRequest.getAction());
+                routeHeaderRule.setHeaderName(ruleRequest.getHeaderName());
+                routeHeaderRule.setHeaderValue(ruleRequest.getHeaderValue());
+                routeHeaderRule.setCreatedAt(LocalDateTime.now());
+                routeHeaderRule.setUpdatedAt(LocalDateTime.now());
+
+                apiRoute.getRouteHeaderRules().add(routeHeaderRule);
+            }
+        }
+
     }
 
     private void validate(RouteRequest routeRequest, Organization organization) {
@@ -162,9 +183,9 @@ public class RouteService {
             String direction = rule.getDirection().toUpperCase(Locale.ENGLISH);
             String action = rule.getAction().toUpperCase(Locale.ENGLISH);
 
-            if(!"REQUEST".equals(direction) && !"RESPONSE".equals(action)) {
+            if(!"REQUEST".equals(direction) && !"RESPONSE".equals(direction)) {
                 throw new ApiException(HttpStatus.BAD_REQUEST,
-                        "direction and action must be either REQUEST or RESPONSE");
+                        "direction must be either REQUEST or RESPONSE");
             }
 
             if(!"ADD".equals(action) && !"REMOVE".equals(action)) {
