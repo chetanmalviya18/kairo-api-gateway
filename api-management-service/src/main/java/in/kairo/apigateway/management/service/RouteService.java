@@ -6,6 +6,7 @@ import in.kairo.apigateway.management.dto.requestDto.RouteStatusRequest;
 import in.kairo.apigateway.management.dto.responseDto.RouteResponse;
 import in.kairo.apigateway.management.entity.ApiRoute;
 import in.kairo.apigateway.management.entity.Organization;
+import in.kairo.apigateway.management.entity.OrganizationStatus;
 import in.kairo.apigateway.management.entity.RouteHeaderRule;
 import in.kairo.apigateway.management.exception.ApiException;
 import in.kairo.apigateway.management.repository.ApiRouteRepository;
@@ -213,5 +214,13 @@ public class RouteService {
             normalized.add(value);
         }
         return normalized;
+    }
+
+
+    //GATEWAY METHODS
+    @Transactional(readOnly = true)
+    public List<RouteResponse> findAllActiveForGateway() {
+        return toResponse(
+                apiRouteRepository.findAllByActiveTrueAndOrganizationStatus(OrganizationStatus.ACTIVE));
     }
 }
