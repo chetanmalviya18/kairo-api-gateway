@@ -4,16 +4,16 @@ import in.kairo.apigateway.management.dto.requestDto.HeaderRuleRequest;
 import in.kairo.apigateway.management.dto.requestDto.RouteRequest;
 import in.kairo.apigateway.management.dto.requestDto.RouteStatusRequest;
 import in.kairo.apigateway.management.dto.responseDto.RouteResponse;
-import in.kairo.apigateway.management.entity.ApiRoute;
-import in.kairo.apigateway.management.entity.Organization;
-import in.kairo.apigateway.management.entity.OrganizationStatus;
-import in.kairo.apigateway.management.entity.RouteHeaderRule;
+import in.kairo.apigateway.management.dto.responseDto.RouteVersionResponse;
+import in.kairo.apigateway.management.entity.*;
 import in.kairo.apigateway.management.exception.ApiException;
 import in.kairo.apigateway.management.repository.ApiRouteRepository;
+import in.kairo.apigateway.management.repository.RouteConfigurationVersionRepository;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -24,10 +24,16 @@ public class RouteService {
 
     private final TenantContext tenantContext;
     private final ApiRouteRepository apiRouteRepository;
+    private final RouteConfigurationVersionRepository versionRepository;
+    private final ObjectMapper objectMapper;
 
-    public RouteService(TenantContext tenantContext, ApiRouteRepository apiRouteRepository) {
+    public RouteService(TenantContext tenantContext, ApiRouteRepository apiRouteRepository,
+                        RouteConfigurationVersionRepository versionRepository, ObjectMapper objectMapper
+    ) {
         this.tenantContext = tenantContext;
         this.apiRouteRepository = apiRouteRepository;
+        this.versionRepository = versionRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -48,6 +54,7 @@ public class RouteService {
 
         apiRouteRepository.save(apiRoute);
 
+        saveVersion(apiRoute, "CREATED");
         return RouteResponse.from(apiRoute);
     }
 
@@ -80,7 +87,7 @@ public class RouteService {
 
         apply(apiRoute, routeRequest);
 
-
+        saveVersion(apiRoute, "UPDATED");
         return RouteResponse.from(apiRoute);
     }
 
@@ -95,6 +102,8 @@ public class RouteService {
         apiRoute.setConfigurationVersion(apiRoute.getConfigurationVersion() + 1);
         apiRoute.setUpdatedAt(LocalDateTime.now());
 
+        String changeType = routeStatusRequest.getActive() ? "ACTIVATED" : "DEACTIVATED";
+        saveVersion(apiRoute, changeType);
         return RouteResponse.from(apiRoute);
     }
 
@@ -107,6 +116,7 @@ public class RouteService {
         apiRoute.setConfigurationVersion(apiRoute.getConfigurationVersion() + 1);
         apiRoute.setUpdatedAt(LocalDateTime.now());
 
+        saveVersion(apiRoute, "DELETED");
         apiRouteRepository.delete(apiRoute);
     }
 
@@ -222,5 +232,34 @@ public class RouteService {
     public List<RouteResponse> findAllActiveForGateway() {
         return toResponse(
                 apiRouteRepository.findAllByActiveTrueAndOrganizationStatus(OrganizationStatus.ACTIVE));
+    }
+
+    private void saveVersion(ApiRoute apiRoute, String changeType) {
+        RouteConfigurationVersion configurationVersion = new RouteConfigurationVersion();
+        configurationVersion.setOrganization(apiRoute.getOrganization());
+        configurationVersion.setRouteId(apiRoute.getRouteId());
+        configurationVersion.setVersionNumber(apiRoute.getConfigurationVersion());
+        configurationVersion.setChangeType(changeType);
+        configurationVersion.setConfigurationSnapshot(
+                objectMapper.writeValueAsString(RouteResponse.from(apiRoute)));
+        configurationVersion.setCreatedAt(LocalDateTime.now());
+
+        versionRepository.save(configurationVersion);
+    }
+
+    @Transactional(readOnly = true)
+    public List<RouteVersionResponse> getVersions(String routeId) {
+        Organization organization = tenantContext.getTenantOrganization();
+
+        List<RouteVersionResponse> responses = new ArrayList<>();
+
+        List<RouteConfigurationVersion> versions = versionRepository
+                .findAllByOrganizationIdAndRouteIdOrderByVersionNumberDesc(organization.getId(), routeId);
+
+        for(RouteConfigurationVersion version : versions) {
+            responses.add(RouteVersionResponse.from(version));
+        }
+
+        return responses;
     }
 }

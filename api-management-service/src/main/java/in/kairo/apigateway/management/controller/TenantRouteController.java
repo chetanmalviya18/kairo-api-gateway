@@ -3,6 +3,7 @@ package in.kairo.apigateway.management.controller;
 import in.kairo.apigateway.management.dto.requestDto.RouteRequest;
 import in.kairo.apigateway.management.dto.requestDto.RouteStatusRequest;
 import in.kairo.apigateway.management.dto.responseDto.RouteResponse;
+import in.kairo.apigateway.management.dto.responseDto.RouteVersionResponse;
 import in.kairo.apigateway.management.service.RouteService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -52,5 +53,10 @@ public class TenantRouteController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         routeService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/route-versions/{routeId}")
+    public ResponseEntity<List<RouteVersionResponse>> getVersions(@PathVariable String routeId) {
+        return ResponseEntity.ok(routeService.getVersions(routeId));
     }
 }
