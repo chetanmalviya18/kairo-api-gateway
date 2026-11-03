@@ -3,11 +3,13 @@ package in.kairo.apigateway.management.service;
 import in.kairo.apigateway.management.dto.requestDto.HeaderRuleRequest;
 import in.kairo.apigateway.management.dto.requestDto.RouteRequest;
 import in.kairo.apigateway.management.dto.requestDto.RouteStatusRequest;
+import in.kairo.apigateway.management.dto.responseDto.AuditRecordResponse;
 import in.kairo.apigateway.management.dto.responseDto.RouteResponse;
 import in.kairo.apigateway.management.dto.responseDto.RouteVersionResponse;
 import in.kairo.apigateway.management.entity.*;
 import in.kairo.apigateway.management.exception.ApiException;
 import in.kairo.apigateway.management.repository.ApiRouteRepository;
+import in.kairo.apigateway.management.repository.ControlPlaneAuditRecordRepository;
 import in.kairo.apigateway.management.repository.RouteConfigurationVersionRepository;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -26,14 +28,18 @@ public class RouteService {
     private final ApiRouteRepository apiRouteRepository;
     private final RouteConfigurationVersionRepository versionRepository;
     private final ObjectMapper objectMapper;
+    private final AuditService auditService;
+    private final ControlPlaneAuditRecordRepository auditRecordRepository;
 
     public RouteService(TenantContext tenantContext, ApiRouteRepository apiRouteRepository,
-                        RouteConfigurationVersionRepository versionRepository, ObjectMapper objectMapper
+                        RouteConfigurationVersionRepository versionRepository, ObjectMapper objectMapper, AuditService auditService, ControlPlaneAuditRecordRepository auditRecordRepository
     ) {
         this.tenantContext = tenantContext;
         this.apiRouteRepository = apiRouteRepository;
         this.versionRepository = versionRepository;
         this.objectMapper = objectMapper;
+        this.auditService = auditService;
+        this.auditRecordRepository = auditRecordRepository;
     }
 
     @Transactional
@@ -53,8 +59,12 @@ public class RouteService {
         apply(apiRoute, routeRequest);
 
         apiRouteRepository.save(apiRoute);
-
         saveVersion(apiRoute, "CREATED");
+
+        auditService.record(organization, "CREATE_ROUTE", "API_ROUTE",
+                apiRoute.getRouteId(), startedAt,
+                "Route configuration version 1 created");
+
         return RouteResponse.from(apiRoute);
     }
 
@@ -88,6 +98,12 @@ public class RouteService {
         apply(apiRoute, routeRequest);
 
         saveVersion(apiRoute, "UPDATED");
+
+        auditService.record(organization, "UPDATE_ROUTE", "API_ROUTE",
+                apiRoute.getRouteId(), startedAt,
+                "Route configuration version " +
+                        apiRoute.getConfigurationVersion() + " created");
+
         return RouteResponse.from(apiRoute);
     }
 
@@ -103,7 +119,13 @@ public class RouteService {
         apiRoute.setUpdatedAt(LocalDateTime.now());
 
         String changeType = routeStatusRequest.getActive() ? "ACTIVATED" : "DEACTIVATED";
+        String action = routeStatusRequest.getActive() ? "ACTIVATE_ROUTE" : "DEACTIVATE_ROUTE";
+
         saveVersion(apiRoute, changeType);
+
+        auditService.record(organization, action, "API_ROUTE", apiRoute.getRouteId(), startedAt,
+                "Route configuration version " + apiRoute.getConfigurationVersion() + " created");
+
         return RouteResponse.from(apiRoute);
     }
 
@@ -117,6 +139,10 @@ public class RouteService {
         apiRoute.setUpdatedAt(LocalDateTime.now());
 
         saveVersion(apiRoute, "DELETED");
+
+        auditService.record(organization, "DELETE_ROUTE", "API_ROUTE", apiRoute.getRouteId(), startedAt,
+                "Final configuration saved as version " + apiRoute.getConfigurationVersion());
+
         apiRouteRepository.delete(apiRoute);
     }
 
@@ -260,6 +286,21 @@ public class RouteService {
             responses.add(RouteVersionResponse.from(version));
         }
 
+        return responses;
+    }
+
+    @Transactional(readOnly = true)
+    public List<AuditRecordResponse> getAuditRecords() {
+        Organization organization = tenantContext.getTenantOrganization();
+
+        List<AuditRecordResponse> responses = new ArrayList<>();
+
+        List<ControlPlaneAuditRecord> records = auditRecordRepository
+                .findAllByOrganizationIdOrderByCreatedAtDesc(organization.getId());
+
+        for (ControlPlaneAuditRecord record : records) {
+            responses.add(AuditRecordResponse.from(record));
+        }
         return responses;
     }
 }

@@ -2,6 +2,7 @@ package in.kairo.apigateway.management.controller;
 
 import in.kairo.apigateway.management.dto.requestDto.RouteRequest;
 import in.kairo.apigateway.management.dto.requestDto.RouteStatusRequest;
+import in.kairo.apigateway.management.dto.responseDto.AuditRecordResponse;
 import in.kairo.apigateway.management.dto.responseDto.RouteResponse;
 import in.kairo.apigateway.management.dto.responseDto.RouteVersionResponse;
 import in.kairo.apigateway.management.service.RouteService;
@@ -58,5 +59,10 @@ public class TenantRouteController {
     @GetMapping("/route-versions/{routeId}")
     public ResponseEntity<List<RouteVersionResponse>> getVersions(@PathVariable String routeId) {
         return ResponseEntity.ok(routeService.getVersions(routeId));
+    }
+
+    @GetMapping("/audit-records")
+    public ResponseEntity<List<AuditRecordResponse>> getAuditRecords() {
+        return ResponseEntity.ok(routeService.getAuditRecords());
     }
 }

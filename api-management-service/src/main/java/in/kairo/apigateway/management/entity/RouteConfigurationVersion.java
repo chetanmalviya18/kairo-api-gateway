@@ -8,7 +8,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "route_configuration_version")
+@Table(name = "route_configuration_versions")
 @Getter
 @Setter
 @NoArgsConstructor
