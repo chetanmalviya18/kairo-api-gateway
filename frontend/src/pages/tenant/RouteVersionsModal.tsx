@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
+import { createPortal } from 'react-dom'
 import { getRouteVersions } from '@/features/routes/routeApi'
+import { X } from 'lucide-react'
 
 interface Props {
   isOpen: boolean
@@ -25,7 +27,7 @@ export default function RouteVersionsModal({ isOpen, onClose, routeId, routeName
     }
   }
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card modal-wide" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
@@ -35,7 +37,7 @@ export default function RouteVersionsModal({ isOpen, onClose, routeId, routeName
             <p className="muted text-xs font-mono">{routeId} {routeName ? `• ${routeName}` : ''}</p>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close">
-            ×
+            <X size={18} />
           </button>
         </div>
 
@@ -79,6 +81,7 @@ export default function RouteVersionsModal({ isOpen, onClose, routeId, routeName
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   getTenantAdmin,
   createTenantAdmin,
@@ -9,7 +10,7 @@ import {
   deleteTenantAdmin,
   type TenantAdminRequest,
 } from '@/features/organizations/organizationApi'
-import { Pencil, Trash2, ToggleLeft, ToggleRight, ArrowLeft } from 'lucide-react'
+import { Pencil, Trash2, ToggleLeft, ToggleRight, ArrowLeft, X } from 'lucide-react'
 
 export default function TenantAdminsPage() {
   const { orgId } = useParams<{ orgId: string }>()
@@ -229,110 +230,112 @@ export default function TenantAdminsPage() {
         </div>
       )}
 
-      {/* Tenant Admin Dialog Modal */}
-      {showForm && (
-        <div className="modal-overlay" onClick={() => setShowForm(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <form onSubmit={handleSubmit}>
-              <div className="modal-header">
-                <div>
-                  <p className="eyebrow">TENANT ACCESS</p>
-                  <h2>{isEdit ? 'Edit administrator' : 'Tenant administrator'}</h2>
-                  <p className="muted text-xs">Organization #{orgId}</p>
-                </div>
-                <button
-                  className="icon-button"
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  aria-label="Close"
-                >
-                  ×
-                </button>
-              </div>
-
-              {errorMsg && (
-                <p className="form-error mb-4">{errorMsg}</p>
-              )}
-
-              <div className="form-grid">
-                <label className="field form-span">
-                  <span>Username</span>
-                  <input
-                    id="tenantAdminUsername"
-                    maxLength={100}
-                    placeholder="foodfast-admin"
-                    value={form.username}
-                    onChange={(e) => setForm({ ...form, username: e.target.value })}
-                    required
-                    autoFocus
-                  />
-                </label>
-
-                <label className="field form-span">
-                  <span>Password</span>
-                  <input
-                    id="tenantAdminPassword"
-                    type="password"
-                    maxLength={100}
-                    placeholder={isEdit ? 'Leave blank to keep existing password' : 'Minimum 8 characters'}
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    required={!isEdit}
-                  />
-                </label>
-
-                <label className="switch-row form-span">
-                  <span>
-                    <strong>Account enabled</strong>
-                    <small>Disabled users cannot log in.</small>
-                  </span>
-                  <input
-                    id="tenantAdminEnabled"
-                    type="checkbox"
-                    checked={form.enabled}
-                    onChange={(e) => setForm({ ...form, enabled: e.target.checked })}
-                  />
-                </label>
-              </div>
-
-              <div className="modal-actions split-actions">
-                {isEdit ? (
+      {/* Tenant Admin Dialog Modal via Portal to avoid stacking context traps */}
+      {showForm &&
+        createPortal(
+          <div className="modal-overlay" onClick={() => setShowForm(false)}>
+            <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+              <form onSubmit={handleSubmit}>
+                <div className="modal-header">
+                  <div>
+                    <p className="eyebrow">TENANT ACCESS</p>
+                    <h2>{isEdit ? 'Edit administrator' : 'Tenant administrator'}</h2>
+                    <p className="muted text-xs">Organization #{orgId}</p>
+                  </div>
                   <button
-                    className="button button-danger"
+                    className="icon-button"
                     type="button"
-                    onClick={() => {
-                      if (window.confirm('Delete this tenant administrator?')) {
-                        deleteMutation.mutate()
-                      }
-                    }}
+                    onClick={() => setShowForm(false)}
+                    aria-label="Close"
                   >
-                    Delete administrator
+                    <X size={18} />
                   </button>
-                ) : (
-                  <span />
+                </div>
+
+                {errorMsg && (
+                  <p className="form-error">{errorMsg}</p>
                 )}
-                <span />
-                <button
-                  className="button button-quiet"
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="button button-primary"
-                  type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                >
-                  {createMutation.isPending || updateMutation.isPending
-                    ? 'Saving…'
-                    : 'Save administrator'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+
+                <div className="form-grid">
+                  <label className="field form-span">
+                    <span>Username</span>
+                    <input
+                      id="tenantAdminUsername"
+                      maxLength={100}
+                      placeholder="foodfast-admin"
+                      value={form.username}
+                      onChange={(e) => setForm({ ...form, username: e.target.value })}
+                      required
+                      autoFocus
+                    />
+                  </label>
+
+                  <label className="field form-span">
+                    <span>Password</span>
+                    <input
+                      id="tenantAdminPassword"
+                      type="password"
+                      maxLength={100}
+                      placeholder={isEdit ? 'Leave blank to keep existing password' : 'Minimum 8 characters'}
+                      value={form.password}
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      required={!isEdit}
+                    />
+                  </label>
+
+                  <label className="switch-row form-span">
+                    <span>
+                      <strong>Account enabled</strong>
+                      <small>Disabled users cannot log in.</small>
+                    </span>
+                    <input
+                      id="tenantAdminEnabled"
+                      type="checkbox"
+                      checked={form.enabled}
+                      onChange={(e) => setForm({ ...form, enabled: e.target.checked })}
+                    />
+                  </label>
+                </div>
+
+                <div className="modal-actions split-actions">
+                  {isEdit ? (
+                    <button
+                      className="button button-danger"
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm('Delete this tenant administrator?')) {
+                          deleteMutation.mutate()
+                        }
+                      }}
+                    >
+                      Delete administrator
+                    </button>
+                  ) : (
+                    <span />
+                  )}
+                  <span />
+                  <button
+                    className="button button-quiet"
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="button button-primary"
+                    type="submit"
+                    disabled={createMutation.isPending || updateMutation.isPending}
+                  >
+                    {createMutation.isPending || updateMutation.isPending
+                      ? 'Saving…'
+                      : 'Save administrator'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
     </section>
   )
 }

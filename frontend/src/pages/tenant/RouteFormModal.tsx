@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { createPortal } from 'react-dom'
 import {
   createRoute,
   updateRoute,
@@ -195,8 +196,10 @@ export default function RouteFormModal({
 
   const isPending = createMutation.isPending || updateMutation.isPending
 
-  return (
-    <div className="fixed inset-0 z-50 bg-[#17221d]/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+  if (!isOpen) return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] bg-[#17221d]/65 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white border border-kairo-cream-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col my-8 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-kairo-cream-border bg-kairo-cream/60">
@@ -488,6 +491,7 @@ export default function RouteFormModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

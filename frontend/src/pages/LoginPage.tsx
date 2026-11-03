@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
-import { useAppDispatch } from '@/app/hooks'
+import { useNavigate, Navigate } from 'react-router-dom'
+import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { setCredentials } from '@/features/auth/authSlice'
 import { login } from '@/features/auth/authApi'
 import KairoLogo from '@/components/common/KairoLogo'
@@ -10,10 +10,16 @@ import './LoginPage.css'
 export default function LoginPage() {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const { token, role } = useAppSelector((s) => s.auth)
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+
+  // Redirect authenticated users away from the login page
+  if (token) {
+    return <Navigate to={role === 'PLATFORM_ADMIN' ? '/platform' : '/tenant'} replace />
+  }
 
   const { mutate, isPending, error } = useMutation({
     mutationFn: login,

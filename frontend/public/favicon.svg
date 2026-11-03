@@ -1,0 +1,35 @@
+<svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="kairo-fav-bg" x1="0" y1="0" x2="42" y2="42" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2d5a37" />
+      <stop offset="1" stop-color="#183e26" />
+    </linearGradient>
+    <linearGradient id="kairo-fav-flow" x1="17" y1="11" x2="30" y2="31" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ddff8f" />
+      <stop offset="1" stop-color="#a7e844" />
+    </linearGradient>
+  </defs>
+
+  <!-- Squircle Base -->
+  <rect width="42" height="42" rx="10" fill="url(#kairo-fav-bg)" />
+  <rect x="0.75" y="0.75" width="40.5" height="40.5" rx="9.25" stroke="#a7e844" stroke-width="1.2" stroke-opacity="0.35" />
+
+  <!-- Outer Ingress Gateway Conduit Accent -->
+  <path d="M32 16C33.5 18 34 20 34 21C34 22 33.5 24 32 26" stroke="#c9f66f" stroke-width="2" stroke-linecap="round" stroke-opacity="0.6" />
+
+  <!-- Vertical Control Plane Spine -->
+  <rect x="10.5" y="10.5" width="4.5" height="21" rx="2.25" fill="#fffcf2" />
+
+  <!-- Routing Vector Flows -->
+  <path d="M18.5 21L28.5 11" stroke="url(#kairo-fav-flow)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M18.5 21L28.5 31" stroke="url(#kairo-fav-flow)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Central Convergence Node -->
+  <circle cx="18.5" cy="21" r="2.8" fill="#ddff8f" />
+  <circle cx="18.5" cy="21" r="1.3" fill="#183e26" />
+
+  <!-- Microservice Target Nodes -->
+  <circle cx="28.5" cy="11" r="1.6" fill="#fffcf2" />
+  <circle cx="28.5" cy="31" r="1.6" fill="#fffcf2" />
+</svg>
+

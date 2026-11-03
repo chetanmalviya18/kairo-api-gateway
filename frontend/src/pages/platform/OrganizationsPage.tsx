@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useState, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import {
   getOrganizations,
   createOrganization,
@@ -9,7 +10,7 @@ import {
   type Organization,
   type OrganizationRequest,
 } from '@/features/organizations/organizationApi'
-import { Users, Trash2, ToggleLeft, ToggleRight, Pencil } from 'lucide-react'
+import { Users, Trash2, ToggleLeft, ToggleRight, Pencil, RefreshCw, X } from 'lucide-react'
 
 export default function OrganizationsPage() {
   const queryClient = useQueryClient()
@@ -125,7 +126,8 @@ export default function OrganizationsPage() {
             onClick={() => refetch()}
             disabled={isRefetching}
           >
-            {isRefetching ? 'Refreshing…' : 'Refresh'}
+            <RefreshCw size={13} className={isRefetching ? 'animate-spin' : ''} />
+            <span>{isRefetching ? 'Refreshing…' : 'Refresh'}</span>
           </button>
         </div>
 
@@ -235,79 +237,81 @@ export default function OrganizationsPage() {
         </div>
       </div>
 
-      {/* New Organization Dialog Modal */}
-      {showForm && (
-        <div className="modal-overlay" onClick={() => setShowForm(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <form onSubmit={handleCreateSubmit}>
-              <div className="modal-header">
-                <div>
-                  <p className="eyebrow">PLATFORM OPERATION</p>
-                  <h2>New organization</h2>
+      {/* New Organization Dialog Modal via Portal to avoid stacking context traps */}
+      {showForm &&
+        createPortal(
+          <div className="modal-overlay" onClick={() => setShowForm(false)}>
+            <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+              <form onSubmit={handleCreateSubmit}>
+                <div className="modal-header">
+                  <div>
+                    <p className="eyebrow">PLATFORM OPERATION</p>
+                    <h2>New organization</h2>
+                  </div>
+                  <button
+                    className="icon-button"
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    aria-label="Close"
+                  >
+                    <X size={18} />
+                  </button>
                 </div>
-                <button
-                  className="icon-button"
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  aria-label="Close"
-                >
-                  ×
-                </button>
-              </div>
 
-              {errorMsg && (
-                <p className="form-error mb-4">{errorMsg}</p>
-              )}
+                {errorMsg && (
+                  <p className="form-error">{errorMsg}</p>
+                )}
 
-              <div className="form-grid">
-                <label className="field form-span">
-                  <span>Name</span>
-                  <input
-                    id="organizationName"
-                    maxLength={150}
-                    placeholder="FoodFast"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    required
-                    autoFocus
-                  />
-                </label>
+                <div className="form-grid">
+                  <label className="field form-span">
+                    <span>Name</span>
+                    <input
+                      id="organizationName"
+                      maxLength={150}
+                      placeholder="FoodFast"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      required
+                      autoFocus
+                    />
+                  </label>
 
-                <label className="field form-span">
-                  <span>Slug</span>
-                  <input
-                    id="organizationSlug"
-                    maxLength={100}
-                    pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-                    placeholder="foodfast"
-                    value={form.slug}
-                    onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase() })}
-                    required
-                  />
-                  <small className="text-muted text-[11px]">Lowercase letters, numbers and hyphens.</small>
-                </label>
-              </div>
+                  <label className="field form-span">
+                    <span>Slug</span>
+                    <input
+                      id="organizationSlug"
+                      maxLength={100}
+                      pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+                      placeholder="foodfast"
+                      value={form.slug}
+                      onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase() })}
+                      required
+                    />
+                    <small>Lowercase letters, numbers and hyphens.</small>
+                  </label>
+                </div>
 
-              <div className="modal-actions">
-                <button
-                  className="button button-quiet"
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="button button-primary"
-                  type="submit"
-                  disabled={createMutation.isPending}
-                >
-                  {createMutation.isPending ? 'Saving…' : 'Save organization'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                <div className="modal-actions">
+                  <button
+                    className="button button-quiet"
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="button button-primary"
+                    type="submit"
+                    disabled={createMutation.isPending}
+                  >
+                    {createMutation.isPending ? 'Saving…' : 'Save organization'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
     </section>
   )
 }
