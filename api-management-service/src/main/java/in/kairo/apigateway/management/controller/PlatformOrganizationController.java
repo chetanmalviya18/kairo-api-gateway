@@ -83,8 +83,8 @@ public class PlatformOrganizationController {
 
     @PatchMapping("/{organizationId}/tenant-admin/{id}/status")
     public ResponseEntity<TenantAdminResponse> changeTenantStatus(@PathVariable Long organizationId,
-                                                                  @PathVariable(required = false) Long id,
-                                                                  @RequestBody TenantAdminStatusRequest request) {
+                                                                  @PathVariable Long id,
+                                                                  @Valid @RequestBody TenantAdminStatusRequest request) {
         return ResponseEntity.ok(organizationService.changeTenantStatus(organizationId, request));
     }
 
