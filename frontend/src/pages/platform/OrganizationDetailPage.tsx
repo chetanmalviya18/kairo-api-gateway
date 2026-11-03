@@ -24,31 +24,23 @@ import {
 
 const STATUS_CONFIG: Record<
   Organization['status'],
-  { label: string; bg: string; text: string; border: string }
+  { label: string; badgeClass: string }
 > = {
   ACTIVE: {
     label: 'ACTIVE',
-    bg: 'bg-green-500/10',
-    text: 'text-green-600 dark:text-green-400',
-    border: 'border-green-500/20',
+    badgeClass: 'bg-kairo-green/10 text-kairo-green border-kairo-green/20',
   },
   PENDING: {
     label: 'PENDING',
-    bg: 'bg-yellow-500/10',
-    text: 'text-yellow-600 dark:text-yellow-400',
-    border: 'border-yellow-500/20',
+    badgeClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
   },
   SUSPENDED: {
     label: 'SUSPENDED',
-    bg: 'bg-red-500/10',
-    text: 'text-red-600 dark:text-red-400',
-    border: 'border-red-500/20',
+    badgeClass: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20',
   },
   DELETED: {
     label: 'DELETED',
-    bg: 'bg-gray-500/10',
-    text: 'text-gray-600 dark:text-gray-400',
-    border: 'border-gray-500/20',
+    badgeClass: 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20',
   },
 }
 
@@ -73,7 +65,6 @@ export default function OrganizationDetailPage() {
     enabled: !isNaN(id),
   })
 
-  // Sync form values when organization loads
   useEffect(() => {
     if (organization) {
       setForm({
@@ -83,7 +74,6 @@ export default function OrganizationDetailPage() {
     }
   }, [organization])
 
-  // Mutation to update name and slug
   const updateMutation = useMutation({
     mutationFn: (data: OrganizationRequest) => updateOrganization(id, data),
     onSuccess: (updated) => {
@@ -100,7 +90,6 @@ export default function OrganizationDetailPage() {
     },
   })
 
-  // Mutation to change status
   const statusMutation = useMutation({
     mutationFn: (newStatus: Organization['status']) =>
       changeOrganizationStatus(id, { status: newStatus }),
@@ -118,7 +107,6 @@ export default function OrganizationDetailPage() {
     },
   })
 
-  // Mutation to soft-delete
   const deleteMutation = useMutation({
     mutationFn: () => deleteOrganization(id),
     onSuccess: () => {
@@ -136,7 +124,6 @@ export default function OrganizationDetailPage() {
     setErrorMessage(null)
     setSuccessMessage(null)
 
-    // Validate slug regex matching backend (@Pattern(regexp = "^[a-z0-9]+(?:-[a-z0-9]+)*$"))
     const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
     if (!slugRegex.test(form.slug)) {
       setErrorMessage(
@@ -161,7 +148,7 @@ export default function OrganizationDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
-        <div className="text-muted-foreground text-sm animate-pulse">
+        <div className="text-muted-foreground text-xs animate-pulse">
           Loading organization details…
         </div>
       </div>
@@ -170,16 +157,16 @@ export default function OrganizationDetailPage() {
 
   if (isError || !organization) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 max-w-xl">
         <button
           onClick={() => navigate('/platform/organizations')}
-          className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-sm transition"
+          className="flex items-center gap-1.5 text-muted-foreground hover:text-kairo-navy text-xs transition"
         >
           <ArrowLeft size={16} /> Back to Organizations
         </button>
-        <div className="p-6 bg-card border border-destructive/20 text-destructive rounded-lg">
-          <p className="font-semibold">Organization not found</p>
-          <p className="text-sm mt-1">
+        <div className="p-6 bg-white border border-destructive/20 text-destructive rounded-xl shadow-sm">
+          <p className="font-semibold text-sm">Organization not found</p>
+          <p className="text-xs mt-1">
             {(error as any)?.response?.data?.message || 'Could not fetch organization with ID ' + id}
           </p>
         </div>
@@ -195,22 +182,22 @@ export default function OrganizationDetailPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <button
           onClick={() => navigate('/platform/organizations')}
-          className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-sm font-medium transition"
+          className="flex items-center gap-1.5 text-muted-foreground hover:text-kairo-navy text-xs font-semibold transition"
         >
           <ArrowLeft size={16} /> Back to Organizations
         </button>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <Link
             to={`/platform/organizations/${id}/admin`}
-            className="flex items-center gap-2 text-xs font-medium border border-border bg-card hover:bg-accent px-3 py-1.5 rounded-md transition shadow-sm"
+            className="flex items-center gap-2 text-xs font-semibold border border-kairo-cream-border bg-white hover:bg-kairo-cream px-3.5 py-2 rounded-lg transition shadow-xs text-kairo-navy"
           >
-            <Key size={14} /> Manage Tenant Admin
+            <Key size={14} className="text-kairo-green" /> Manage Tenant Admin
           </Link>
           <button
             onClick={handleDelete}
             disabled={deleteMutation.isPending}
-            className="flex items-center gap-2 text-xs font-medium text-destructive hover:bg-destructive/10 border border-destructive/20 px-3 py-1.5 rounded-md transition"
+            className="flex items-center gap-2 text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/20 px-3.5 py-2 rounded-lg transition"
             title="Delete Organization"
           >
             <Trash2 size={14} /> Delete
@@ -219,21 +206,21 @@ export default function OrganizationDetailPage() {
       </div>
 
       {/* Title & Status Summary Card */}
-      <div className="bg-card border border-border rounded-lg p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white border border-kairo-cream-border rounded-xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xl">
+          <div className="w-12 h-12 rounded-xl bg-kairo-navy text-white flex items-center justify-center font-bold text-xl shadow-md">
             <Building2 size={24} />
           </div>
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl font-bold">{organization.name}</h1>
+              <h1 className="text-2xl font-bold text-kairo-navy">{organization.name}</h1>
               <span
-                className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${statusStyle.badgeClass}`}
               >
                 {statusStyle.label}
               </span>
             </div>
-            <p className="text-muted-foreground text-sm font-mono mt-0.5">
+            <p className="text-muted-foreground text-xs font-mono mt-0.5">
               slug: /{organization.slug} • id: #{organization.id}
             </p>
           </div>
@@ -241,9 +228,11 @@ export default function OrganizationDetailPage() {
 
         {/* Status Actions */}
         <div className="flex items-center gap-2">
-          <label className="text-xs text-muted-foreground font-medium">Status:</label>
+          <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+            Status:
+          </label>
           <select
-            className="text-xs font-medium border border-input bg-background rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-ring"
+            className="text-xs font-semibold border border-kairo-cream-border bg-white rounded-lg px-3 py-2 text-kairo-navy focus:outline-none focus:ring-2 focus:ring-kairo-green cursor-pointer"
             value={organization.status}
             disabled={statusMutation.isPending}
             onChange={(e) => statusMutation.mutate(e.target.value as Organization['status'])}
@@ -257,14 +246,14 @@ export default function OrganizationDetailPage() {
 
       {/* Notifications */}
       {successMessage && (
-        <div className="flex items-center gap-2 p-4 text-sm bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 rounded-lg">
+        <div className="flex items-center gap-2 p-4 text-xs font-medium bg-kairo-green/10 border border-kairo-green/20 text-kairo-green rounded-xl">
           <CheckCircle2 size={18} />
           <span>{successMessage}</span>
         </div>
       )}
 
       {errorMessage && (
-        <div className="flex items-center gap-2 p-4 text-sm bg-destructive/10 border border-destructive/20 text-destructive rounded-lg">
+        <div className="flex items-center gap-2 p-4 text-xs font-medium bg-destructive/10 border border-destructive/20 text-destructive rounded-xl">
           <AlertCircle size={18} />
           <span>{errorMessage}</span>
         </div>
@@ -273,42 +262,42 @@ export default function OrganizationDetailPage() {
       {/* Main Grid: Edit Form & Metadata */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Edit Form */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-lg p-6 shadow-sm">
-          <div className="flex items-center gap-2 pb-4 mb-5 border-b border-border">
-            <ShieldCheck size={18} className="text-muted-foreground" />
-            <h2 className="text-base font-semibold">Edit Organization</h2>
+        <div className="lg:col-span-2 bg-white border border-kairo-cream-border rounded-xl p-6 shadow-sm">
+          <div className="flex items-center gap-2 pb-4 mb-5 border-b border-kairo-cream-border">
+            <ShieldCheck size={18} className="text-kairo-green" />
+            <h2 className="text-sm font-bold text-kairo-navy">Edit Organization Details</h2>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
                 Organization Name <span className="text-destructive">*</span>
               </label>
               <input
                 type="text"
-                className="w-full border border-input rounded-md px-3.5 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full border border-kairo-cream-border rounded-lg px-3.5 py-2.5 text-sm bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green transition"
                 value={form.name}
                 maxLength={150}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
               />
-              <p className="text-xs text-muted-foreground mt-1">Maximum 150 characters.</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Maximum 150 characters.</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
                 Slug <span className="text-destructive">*</span>
               </label>
               <input
                 type="text"
-                className="w-full border border-input font-mono text-xs rounded-md px-3.5 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full border border-kairo-cream-border font-mono text-xs rounded-lg px-3.5 py-2.5 bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green transition"
                 value={form.slug}
                 maxLength={100}
                 onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase() })}
                 required
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Used in gateway route path prefix: <span className="font-mono">/{form.slug || '...'}/</span>. Lowercase letters, numbers, and single hyphens.
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Used in gateway route prefix: <span className="font-mono">/{form.slug || '...'}/</span>. Lowercase letters, numbers, and single hyphens.
               </p>
             </div>
 
@@ -321,7 +310,7 @@ export default function OrganizationDetailPage() {
                     slug: organization.slug,
                   })
                 }
-                className="px-4 py-2 border border-border text-sm font-medium rounded-md hover:bg-accent transition"
+                className="px-4 py-2 border border-kairo-cream-border text-xs font-semibold rounded-lg hover:bg-kairo-cream transition"
               >
                 Reset
               </button>
@@ -332,9 +321,9 @@ export default function OrganizationDetailPage() {
                   updateMutation.isPending ||
                   (form.name === organization.name && form.slug === organization.slug)
                 }
-                className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 disabled:opacity-50 transition"
+                className="flex items-center gap-2 bg-kairo-navy hover:bg-kairo-navy-light text-white px-5 py-2 rounded-lg text-xs font-semibold shadow-sm disabled:opacity-50 transition"
               >
-                <Save size={16} />
+                <Save size={15} />
                 {updateMutation.isPending ? 'Saving changes…' : 'Save Changes'}
               </button>
             </div>
@@ -342,21 +331,21 @@ export default function OrganizationDetailPage() {
         </div>
 
         {/* Metadata Card */}
-        <div className="bg-card border border-border rounded-lg p-6 shadow-sm space-y-5 h-fit">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground border-b border-border pb-3">
+        <div className="bg-white border border-kairo-cream-border rounded-xl p-6 shadow-sm space-y-5 h-fit">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-kairo-navy border-b border-kairo-cream-border pb-3">
             Metadata & Audit
           </h3>
 
-          <div className="space-y-4 text-sm">
+          <div className="space-y-4 text-xs">
             <div>
-              <span className="text-xs text-muted-foreground block mb-0.5">Organization ID</span>
-              <span className="font-mono font-medium">#{organization.id}</span>
+              <span className="text-[11px] text-muted-foreground block mb-0.5">Organization ID</span>
+              <span className="font-mono font-bold text-kairo-navy text-sm">#{organization.id}</span>
             </div>
 
             <div className="flex items-start gap-2.5">
-              <Calendar size={16} className="text-muted-foreground mt-0.5 shrink-0" />
+              <Calendar size={16} className="text-kairo-green mt-0.5 shrink-0" />
               <div>
-                <span className="text-xs text-muted-foreground block">Created At</span>
+                <span className="text-[11px] text-muted-foreground block">Created At</span>
                 <span className="font-medium">
                   {new Date(organization.createdAt).toLocaleString()}
                 </span>
@@ -364,9 +353,9 @@ export default function OrganizationDetailPage() {
             </div>
 
             <div className="flex items-start gap-2.5">
-              <Clock size={16} className="text-muted-foreground mt-0.5 shrink-0" />
+              <Clock size={16} className="text-kairo-navy mt-0.5 shrink-0" />
               <div>
-                <span className="text-xs text-muted-foreground block">Last Updated</span>
+                <span className="text-[11px] text-muted-foreground block">Last Updated</span>
                 <span className="font-medium">
                   {new Date(organization.updatedAt).toLocaleString()}
                 </span>

@@ -20,6 +20,7 @@ import {
   History,
   Search,
   Zap,
+  Route as RouteIcon,
 } from 'lucide-react'
 
 export default function RoutesPage() {
@@ -95,18 +96,21 @@ export default function RoutesPage() {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-6xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold">API Gateway Routes</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            Manage URL routing patterns, targets, rate limits, and header transformations
+          <h1 className="text-2xl font-bold tracking-tight text-kairo-navy flex items-center gap-2.5">
+            <RouteIcon className="text-kairo-green" size={26} />
+            <span>API Gateway Routes</span>
+          </h1>
+          <p className="text-muted-foreground text-xs mt-1">
+            Configure URL matching rules, target upstreams, rate limit ceilings, and header rewrites
           </p>
         </div>
         <button
           onClick={handleOpenCreate}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 transition shadow-sm self-start sm:self-auto"
+          className="flex items-center gap-2 bg-kairo-navy hover:bg-kairo-navy-light text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow-sm transition self-start sm:self-auto"
         >
           <Plus size={16} /> New Route
         </button>
@@ -114,64 +118,66 @@ export default function RoutesPage() {
 
       {/* Search / Filter Bar */}
       <div className="relative max-w-md">
-        <Search size={16} className="absolute left-3 top-2.5 text-muted-foreground" />
+        <Search size={16} className="absolute left-3.5 top-3 text-muted-foreground" />
         <input
           type="text"
           placeholder="Search by route ID, name, or path pattern…"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full border border-input rounded-md pl-9 pr-4 py-2 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full border border-kairo-cream-border rounded-lg pl-10 pr-4 py-2.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green shadow-xs transition"
         />
       </div>
 
       {/* Routes Table */}
-      <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
+      <div className="bg-white border border-kairo-cream-border rounded-xl shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-sm text-muted-foreground animate-pulse">
+          <div className="p-10 text-center text-xs text-muted-foreground animate-pulse">
             Loading gateway routes…
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-border bg-muted/50 text-muted-foreground font-semibold">
-                  <th className="text-left px-4 py-3">Route</th>
-                  <th className="text-left px-4 py-3">Path Pattern</th>
-                  <th className="text-left px-4 py-3">Target Upstream</th>
-                  <th className="text-left px-4 py-3">Methods</th>
-                  <th className="text-left px-4 py-3">Limits</th>
-                  <th className="text-left px-4 py-3">Status</th>
-                  <th className="text-right px-4 py-3">Actions</th>
+                <tr className="border-b border-kairo-cream-border bg-kairo-cream/60 text-kairo-navy font-semibold">
+                  <th className="text-left px-5 py-3.5">Route</th>
+                  <th className="text-left px-5 py-3.5">Ingress Pattern</th>
+                  <th className="text-left px-5 py-3.5">Target Upstream</th>
+                  <th className="text-left px-5 py-3.5">Methods</th>
+                  <th className="text-left px-5 py-3.5">Limits</th>
+                  <th className="text-left px-5 py-3.5">Status</th>
+                  <th className="text-right px-5 py-3.5">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredRoutes?.map((route: ApiRoute) => (
                   <tr
                     key={route.id}
-                    className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
+                    className="border-b border-kairo-cream-border last:border-0 hover:bg-kairo-cream/30 transition-colors"
                   >
                     {/* Route ID & Name */}
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3.5">
                       <div>
-                        <div className="flex items-center gap-1.5 font-bold text-foreground">
-                          <span>{route.name}</span>
-                          <span className="font-mono text-[10px] text-muted-foreground px-1.5 py-0.2 bg-muted rounded">
+                        <div className="flex items-center gap-1.5 font-bold text-kairo-navy">
+                          <span className="text-sm">{route.name}</span>
+                          <span className="font-mono text-[10px] text-muted-foreground px-1.5 py-0.2 bg-kairo-cream border border-kairo-cream-border rounded">
                             v{route.configurationVersion}
                           </span>
                         </div>
-                        <span className="font-mono text-[11px] text-muted-foreground block">
+                        <span className="font-mono text-[11px] text-muted-foreground block mt-0.5">
                           {route.routeId}
                         </span>
                       </div>
                     </td>
 
                     {/* Path Pattern */}
-                    <td className="px-4 py-3 font-mono font-medium text-foreground">
-                      {route.pathPattern}
+                    <td className="px-5 py-3.5 font-mono font-semibold text-kairo-navy">
+                      <span className="px-2 py-0.5 rounded bg-kairo-cream border border-kairo-cream-border">
+                        {route.pathPattern}
+                      </span>
                     </td>
 
                     {/* Target Base URL + Prefix */}
-                    <td className="px-4 py-3 font-mono text-[11px] text-muted-foreground max-w-[200px] truncate">
+                    <td className="px-5 py-3.5 font-mono text-[11px] text-muted-foreground max-w-[200px] truncate">
                       <span title={`${route.targetBaseUrl}${route.targetPathPrefix}`}>
                         {route.targetBaseUrl}
                         {route.targetPathPrefix !== '/' ? route.targetPathPrefix : ''}
@@ -179,12 +185,12 @@ export default function RoutesPage() {
                     </td>
 
                     {/* Allowed Methods */}
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3.5">
                       <div className="flex flex-wrap gap-1 max-w-[140px]">
                         {route.allowedMethods.map((m) => (
                           <span
                             key={m}
-                            className="px-1.5 py-0.5 bg-muted border border-border/60 rounded text-[10px] font-mono font-semibold"
+                            className="px-1.5 py-0.5 bg-kairo-cream text-kairo-navy border border-kairo-cream-border rounded text-[10px] font-mono font-bold"
                           >
                             {m}
                           </span>
@@ -193,14 +199,14 @@ export default function RoutesPage() {
                     </td>
 
                     {/* Limits & Idempotency */}
-                    <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                      <div>{route.requestsPerMinute} req/min</div>
-                      <div className="text-[11px] flex items-center gap-1">
+                    <td className="px-5 py-3.5 whitespace-nowrap text-muted-foreground">
+                      <div className="font-medium text-foreground">{route.requestsPerMinute} req/min</div>
+                      <div className="text-[11px] flex items-center gap-1 text-muted-foreground">
                         <span>{route.responseTimeoutMs}ms</span>
                         {route.idempotencyEnabled && (
                           <span
                             title="Idempotency Enabled"
-                            className="text-amber-500 font-bold"
+                            className="text-amber-600 font-bold"
                           >
                             <Zap size={11} className="inline fill-current" />
                           </span>
@@ -209,12 +215,12 @@ export default function RoutesPage() {
                     </td>
 
                     {/* Status */}
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-5 py-3.5 whitespace-nowrap">
                       <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                        className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
                           route.active
-                            ? 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20'
-                            : 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20'
+                            ? 'bg-kairo-green/10 text-kairo-green border-kairo-green/20'
+                            : 'bg-gray-500/10 text-gray-500 border-gray-500/20'
                         }`}
                       >
                         {route.active ? 'Active' : 'Inactive'}
@@ -222,15 +228,15 @@ export default function RoutesPage() {
                     </td>
 
                     {/* Action buttons */}
-                    <td className="px-4 py-3 whitespace-nowrap text-right">
-                      <div className="flex items-center gap-1 justify-end">
+                    <td className="px-5 py-3.5 whitespace-nowrap text-right">
+                      <div className="flex items-center gap-1.5 justify-end">
                         {/* Versions */}
                         <button
                           onClick={() =>
                             setVersionModalRoute({ id: route.routeId, name: route.name })
                           }
                           title="View configuration versions"
-                          className="text-muted-foreground hover:text-foreground p-1.5 rounded hover:bg-accent transition"
+                          className="text-muted-foreground hover:text-kairo-navy p-1.5 rounded-lg hover:bg-kairo-cream transition"
                         >
                           <History size={15} />
                         </button>
@@ -241,11 +247,11 @@ export default function RoutesPage() {
                             navigate(`/tenant/routes/${route.id}/header-rules`)
                           }
                           title={`Header Rules (${route.headerRules?.length || 0})`}
-                          className="text-muted-foreground hover:text-foreground p-1.5 rounded hover:bg-accent transition relative"
+                          className="text-muted-foreground hover:text-kairo-navy p-1.5 rounded-lg hover:bg-kairo-cream transition relative"
                         >
                           <Settings2 size={15} />
                           {route.headerRules && route.headerRules.length > 0 && (
-                            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-primary text-primary-foreground text-[9px] rounded-full flex items-center justify-center font-bold">
+                            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-kairo-green text-white text-[9px] rounded-full flex items-center justify-center font-bold">
                               {route.headerRules.length}
                             </span>
                           )}
@@ -255,7 +261,7 @@ export default function RoutesPage() {
                         <button
                           onClick={() => handleOpenEdit(route)}
                           title="Edit Route"
-                          className="text-muted-foreground hover:text-foreground p-1.5 rounded hover:bg-accent transition"
+                          className="text-muted-foreground hover:text-kairo-navy p-1.5 rounded-lg hover:bg-kairo-cream transition"
                         >
                           <Pencil size={15} />
                         </button>
@@ -266,10 +272,10 @@ export default function RoutesPage() {
                             statusMutation.mutate({ id: route.id, active: !route.active })
                           }
                           title={route.active ? 'Deactivate Route' : 'Activate Route'}
-                          className="text-muted-foreground hover:text-foreground p-1.5 rounded hover:bg-accent transition"
+                          className="text-muted-foreground hover:text-kairo-navy p-1.5 rounded-lg hover:bg-kairo-cream transition"
                         >
                           {route.active ? (
-                            <ToggleRight size={18} className="text-green-600" />
+                            <ToggleRight size={18} className="text-kairo-green" />
                           ) : (
                             <ToggleLeft size={18} />
                           )}
@@ -279,7 +285,7 @@ export default function RoutesPage() {
                         <button
                           onClick={() => handleDelete(route)}
                           title="Delete Route"
-                          className="text-muted-foreground hover:text-destructive p-1.5 rounded hover:bg-destructive/10 transition"
+                          className="text-muted-foreground hover:text-destructive p-1.5 rounded-lg hover:bg-destructive/10 transition"
                         >
                           <Trash2 size={15} />
                         </button>
@@ -290,7 +296,7 @@ export default function RoutesPage() {
 
                 {filteredRoutes?.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-5 py-10 text-center text-muted-foreground">
                       No matching routes found. Click "New Route" to create your first route.
                     </td>
                   </tr>

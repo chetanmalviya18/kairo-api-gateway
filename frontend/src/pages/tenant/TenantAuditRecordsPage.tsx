@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getAuditRecords, type AuditRecordResponse } from '@/features/routes/routeApi'
-import { ShieldAlert, Search, RefreshCw, CheckCircle2, XCircle } from 'lucide-react'
+import { ShieldCheck, Search, RefreshCw, CheckCircle2, XCircle } from 'lucide-react'
 
 export default function TenantAuditRecordsPage() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -29,60 +29,63 @@ export default function TenantAuditRecordsPage() {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-6xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold">Control Plane Audit Records</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            Audit trail of configuration modifications and administrative actions
+          <h1 className="text-2xl font-bold tracking-tight text-kairo-navy flex items-center gap-2.5">
+            <ShieldCheck className="text-kairo-green" size={26} />
+            <span>Audit Records</span>
+          </h1>
+          <p className="text-muted-foreground text-xs mt-1">
+            Immutable audit trail of configuration modifications and administrative events
           </p>
         </div>
         <button
           onClick={() => refetch()}
           disabled={isLoading || isRefetching}
-          className="flex items-center gap-1.5 self-start sm:self-auto text-xs font-medium border border-border bg-card hover:bg-accent px-3 py-2 rounded-md transition shadow-sm disabled:opacity-50"
+          className="flex items-center gap-1.5 self-start sm:self-auto text-xs font-semibold border border-kairo-cream-border bg-white hover:bg-kairo-cream px-3.5 py-2.5 rounded-lg transition shadow-xs disabled:opacity-50 text-kairo-navy"
         >
           <RefreshCw size={14} className={isRefetching ? 'animate-spin' : ''} />
-          <span>Refresh</span>
+          <span>Refresh Records</span>
         </button>
       </div>
 
       {/* Search Bar */}
       <div className="relative max-w-md">
-        <Search size={16} className="absolute left-3 top-2.5 text-muted-foreground" />
+        <Search size={16} className="absolute left-3.5 top-3 text-muted-foreground" />
         <input
           type="text"
           placeholder="Filter by action, actor, resource ID, or correlation ID…"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full border border-input rounded-md pl-9 pr-4 py-2 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full border border-kairo-cream-border rounded-lg pl-10 pr-4 py-2.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green shadow-xs transition"
         />
       </div>
 
       {/* Audit Table */}
-      <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
+      <div className="bg-white border border-kairo-cream-border rounded-xl shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-sm text-muted-foreground animate-pulse">
-            Loading audit records…
+          <div className="p-10 text-center text-xs text-muted-foreground animate-pulse">
+            Loading control plane audit records…
           </div>
         ) : !filtered || filtered.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-            <ShieldAlert size={28} className="text-muted-foreground/60" />
+          <div className="p-10 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
+            <ShieldCheck size={32} className="text-muted-foreground/40" />
             <p>No audit records found.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-border bg-muted/50 text-muted-foreground font-semibold">
-                  <th className="text-left px-4 py-3">Timestamp</th>
-                  <th className="text-left px-4 py-3">Actor</th>
-                  <th className="text-left px-4 py-3">Action</th>
-                  <th className="text-left px-4 py-3">Resource</th>
-                  <th className="text-left px-4 py-3">Result</th>
-                  <th className="text-left px-4 py-3">Duration</th>
-                  <th className="text-left px-4 py-3">Details</th>
+                <tr className="border-b border-kairo-cream-border bg-kairo-cream/60 text-kairo-navy font-semibold">
+                  <th className="text-left px-5 py-3.5">Timestamp</th>
+                  <th className="text-left px-5 py-3.5">Actor</th>
+                  <th className="text-left px-5 py-3.5">Action</th>
+                  <th className="text-left px-5 py-3.5">Resource</th>
+                  <th className="text-left px-5 py-3.5">Result</th>
+                  <th className="text-left px-5 py-3.5">Latency</th>
+                  <th className="text-left px-5 py-3.5">Details</th>
                 </tr>
               </thead>
               <tbody>
@@ -91,33 +94,33 @@ export default function TenantAuditRecordsPage() {
                   return (
                     <tr
                       key={record.id}
-                      className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
+                      className="border-b border-kairo-cream-border last:border-0 hover:bg-kairo-cream/30 transition-colors"
                     >
-                      <td className="px-4 py-3 font-mono text-[11px] text-muted-foreground whitespace-nowrap">
+                      <td className="px-5 py-3.5 font-mono text-[11px] text-muted-foreground whitespace-nowrap">
                         {new Date(record.createdAt).toLocaleString()}
                       </td>
 
-                      <td className="px-4 py-3 font-medium whitespace-nowrap">
-                        <span className="px-2 py-0.5 rounded bg-muted font-mono text-[11px]">
+                      <td className="px-5 py-3.5 font-medium whitespace-nowrap">
+                        <span className="px-2 py-0.5 rounded bg-kairo-cream border border-kairo-cream-border font-mono text-[11px] text-kairo-navy">
                           {record.actor}
                         </span>
                       </td>
 
-                      <td className="px-4 py-3 font-semibold whitespace-nowrap">
+                      <td className="px-5 py-3.5 font-bold text-kairo-navy whitespace-nowrap">
                         {record.action}
                       </td>
 
-                      <td className="px-4 py-3 font-mono text-[11px] whitespace-nowrap text-muted-foreground">
+                      <td className="px-5 py-3.5 font-mono text-[11px] whitespace-nowrap text-muted-foreground">
                         {record.resourceType}
                         {record.resourceId ? ` / ${record.resourceId}` : ''}
                       </td>
 
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-5 py-3.5 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
                             isSuccess
-                              ? 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20'
-                              : 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+                              ? 'bg-kairo-green/10 text-kairo-green border-kairo-green/20'
+                              : 'bg-rose-500/10 text-rose-700 border-rose-500/20'
                           }`}
                         >
                           {isSuccess ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
@@ -125,11 +128,11 @@ export default function TenantAuditRecordsPage() {
                         </span>
                       </td>
 
-                      <td className="px-4 py-3 font-mono text-[11px] text-muted-foreground whitespace-nowrap">
+                      <td className="px-5 py-3.5 font-mono text-[11px] text-muted-foreground whitespace-nowrap">
                         {record.durationMs}ms
                       </td>
 
-                      <td className="px-4 py-3 text-muted-foreground max-w-xs truncate" title={record.details}>
+                      <td className="px-5 py-3.5 text-muted-foreground max-w-xs truncate" title={record.details}>
                         {record.details || '—'}
                       </td>
                     </tr>

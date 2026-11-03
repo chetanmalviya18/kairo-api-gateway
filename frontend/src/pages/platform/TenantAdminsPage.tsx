@@ -9,7 +9,7 @@ import {
   deleteTenantAdmin,
   type TenantAdminRequest,
 } from '@/features/organizations/organizationApi'
-import { ArrowLeft, Pencil, Trash2, ToggleLeft, ToggleRight, UserCheck, UserX } from 'lucide-react'
+import { ArrowLeft, Pencil, Trash2, ToggleLeft, ToggleRight, UserCheck, UserX, KeyRound } from 'lucide-react'
 
 export default function TenantAdminsPage() {
   const { orgId } = useParams<{ orgId: string }>()
@@ -52,7 +52,6 @@ export default function TenantAdminsPage() {
     },
   })
 
-  // Status toggle mutation using the new endpoint
   const statusMutation = useMutation({
     mutationFn: (enabled: boolean) =>
       changeTenantAdminStatus(id, admin!.id, { enabled }),
@@ -98,20 +97,23 @@ export default function TenantAdminsPage() {
     <div className="max-w-3xl space-y-6">
       <button
         onClick={() => navigate(`/platform/organizations/${orgId}`)}
-        className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-sm font-medium transition"
+        className="flex items-center gap-1.5 text-muted-foreground hover:text-kairo-navy text-xs font-semibold transition"
       >
         <ArrowLeft size={16} /> Back to Organization Details
       </button>
 
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold">Tenant Administrator</h2>
-          <p className="text-muted-foreground text-sm mt-0.5">Organization #{orgId}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-kairo-navy flex items-center gap-2">
+            <KeyRound className="text-kairo-green" size={24} />
+            <span>Tenant Administrator</span>
+          </h1>
+          <p className="text-muted-foreground text-xs mt-0.5">Organization #{orgId}</p>
         </div>
         {(noAdmin || !admin) && !isLoading && (
           <button
             onClick={openCreate}
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 transition shadow-sm"
+            className="bg-kairo-navy hover:bg-kairo-navy-light text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow-sm transition"
           >
             Assign Tenant Admin
           </button>
@@ -122,37 +124,37 @@ export default function TenantAdminsPage() {
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="bg-card border border-border rounded-lg p-6 shadow-sm space-y-4"
+          className="bg-white border border-kairo-cream-border rounded-xl p-6 shadow-sm space-y-4"
         >
-          <h3 className="font-semibold text-base">
+          <h3 className="font-bold text-sm text-kairo-navy">
             {isEdit ? 'Edit Tenant Admin' : 'Assign New Tenant Admin'}
           </h3>
 
           {errorMsg && (
-            <p className="text-destructive text-sm bg-destructive/10 p-3 rounded-md">
+            <p className="text-destructive text-xs bg-destructive/10 p-3 rounded-lg border border-destructive/20">
               {errorMsg}
             </p>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
                 Username <span className="text-destructive">*</span>
               </label>
               <input
-                className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full border border-kairo-cream-border rounded-lg px-3.5 py-2 text-sm bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green transition"
                 value={form.username}
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Password {isEdit ? <span className="text-muted-foreground text-xs">(leave blank to keep)</span> : <span className="text-destructive">*</span>}
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+                Password {isEdit ? <span className="text-muted-foreground text-[10px] lowercase">(leave blank to keep)</span> : <span className="text-destructive">*</span>}
               </label>
               <input
                 type="password"
-                className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full border border-kairo-cream-border rounded-lg px-3.5 py-2 text-sm bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green transition"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 required={!isEdit}
@@ -160,23 +162,23 @@ export default function TenantAdminsPage() {
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+          <label className="flex items-center gap-2 text-xs font-medium cursor-pointer select-none">
             <input
               type="checkbox"
               checked={form.enabled}
               onChange={(e) => setForm({ ...form, enabled: e.target.checked })}
-              className="rounded border-input text-primary focus:ring-ring"
+              className="rounded border-kairo-cream-border text-kairo-green focus:ring-kairo-green"
             />
-            <span className="font-medium">Active / Enabled</span>
+            <span>Active / Enabled Account</span>
           </label>
 
           <div className="flex gap-3 pt-2">
             <button
               type="submit"
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 disabled:opacity-50 transition"
+              className="bg-kairo-navy hover:bg-kairo-navy-light text-white px-5 py-2 rounded-lg text-xs font-semibold shadow-sm transition disabled:opacity-50"
             >
-              {createMutation.isPending || updateMutation.isPending ? 'Saving…' : 'Save'}
+              {createMutation.isPending || updateMutation.isPending ? 'Saving…' : 'Save Administrator'}
             </button>
             <button
               type="button"
@@ -184,7 +186,7 @@ export default function TenantAdminsPage() {
                 setShowForm(false)
                 setErrorMsg(null)
               }}
-              className="border border-border px-4 py-2 rounded-md text-sm font-medium hover:bg-accent transition"
+              className="border border-kairo-cream-border px-4 py-2 rounded-lg text-xs font-medium hover:bg-kairo-cream transition"
             >
               Cancel
             </button>
@@ -194,21 +196,21 @@ export default function TenantAdminsPage() {
 
       {/* Admin details card */}
       {isLoading && (
-        <div className="p-8 text-center text-sm text-muted-foreground animate-pulse">
+        <div className="p-8 text-center text-xs text-muted-foreground animate-pulse">
           Loading admin details…
         </div>
       )}
 
       {admin && (
-        <div className="bg-card border border-border rounded-lg p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-white border border-kairo-cream-border rounded-xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2.5">
-              <span className="font-semibold text-lg">{admin.username}</span>
+              <span className="font-bold text-base text-kairo-navy">{admin.username}</span>
               <span
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
                   admin.enabled
-                    ? 'bg-green-500/10 text-green-600 border border-green-500/20'
-                    : 'bg-red-500/10 text-red-600 border border-red-500/20'
+                    ? 'bg-kairo-green/10 text-kairo-green border-kairo-green/20'
+                    : 'bg-rose-500/10 text-rose-700 border-rose-500/20'
                 }`}
               >
                 {admin.enabled ? <UserCheck size={12} /> : <UserX size={12} />}
@@ -222,17 +224,16 @@ export default function TenantAdminsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Quick status toggle button using the PATCH /status endpoint */}
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => statusMutation.mutate(!admin.enabled)}
               disabled={statusMutation.isPending}
               title={admin.enabled ? 'Click to disable tenant admin' : 'Click to enable tenant admin'}
-              className="flex items-center gap-1.5 text-xs font-medium border border-border hover:bg-accent px-3 py-1.5 rounded-md transition"
+              className="flex items-center gap-1.5 text-xs font-semibold border border-kairo-cream-border hover:bg-kairo-cream px-3 py-1.5 rounded-lg transition"
             >
               {admin.enabled ? (
                 <>
-                  <ToggleRight size={18} className="text-green-600" />
+                  <ToggleRight size={18} className="text-kairo-green" />
                   <span>Disable</span>
                 </>
               ) : (
@@ -245,10 +246,10 @@ export default function TenantAdminsPage() {
 
             <button
               onClick={openEdit}
-              className="text-muted-foreground hover:text-foreground p-1.5 rounded hover:bg-accent transition"
+              className="text-muted-foreground hover:text-kairo-navy p-1.5 rounded-lg hover:bg-kairo-cream transition"
               title="Edit details / password"
             >
-              <Pencil size={16} />
+              <Pencil size={15} />
             </button>
 
             <button
@@ -258,17 +259,17 @@ export default function TenantAdminsPage() {
                 }
               }}
               disabled={deleteMutation.isPending}
-              className="text-muted-foreground hover:text-destructive p-1.5 rounded hover:bg-destructive/10 transition"
+              className="text-muted-foreground hover:text-destructive p-1.5 rounded-lg hover:bg-destructive/10 transition"
               title="Delete tenant admin"
             >
-              <Trash2 size={16} />
+              <Trash2 size={15} />
             </button>
           </div>
         </div>
       )}
 
       {noAdmin && !showForm && (
-        <div className="bg-card border border-border rounded-lg p-8 text-center text-muted-foreground text-sm shadow-sm">
+        <div className="bg-white border border-kairo-cream-border rounded-xl p-8 text-center text-muted-foreground text-xs shadow-sm">
           No tenant administrator assigned yet. Click "Assign Tenant Admin" above to create one.
         </div>
       )}

@@ -76,6 +76,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
     mutationFn: createRoute,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['routes'] })
+      queryClient.invalidateQueries({ queryKey: ['tenant-audit-records'] })
       onClose()
     },
     onError: (err: any) => {
@@ -88,6 +89,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['routes'] })
       queryClient.invalidateQueries({ queryKey: ['route', route!.id] })
+      queryClient.invalidateQueries({ queryKey: ['tenant-audit-records'] })
       onClose()
     },
     onError: (err: any) => {
@@ -99,7 +101,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
 
   const toggleMethod = (method: string) => {
     if (allowedMethods.includes(method)) {
-      if (allowedMethods.length === 1) return // at least one method required
+      if (allowedMethods.length === 1) return
       setAllowedMethods(allowedMethods.filter((m) => m !== method))
     } else {
       setAllowedMethods([...allowedMethods, method])
@@ -183,23 +185,30 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
   const isPending = createMutation.isPending || updateMutation.isPending
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-card border border-border rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] flex flex-col my-8">
+    <div className="fixed inset-0 z-50 bg-kairo-navy/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-white border border-kairo-cream-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col my-8 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="text-lg font-bold">{isEdit ? 'Edit API Route' : 'Create New API Route'}</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-kairo-cream-border bg-kairo-cream/60">
+          <div>
+            <h2 className="text-base font-bold text-kairo-navy">
+              {isEdit ? 'Edit API Route' : 'Create New API Route'}
+            </h2>
+            <p className="text-[11px] text-muted-foreground">
+              Define matching rules and upstream routing specifications
+            </p>
+          </div>
           <button
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground p-1 rounded-md transition"
+            className="text-muted-foreground hover:text-kairo-navy p-1.5 rounded-lg hover:bg-white transition"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5 bg-white">
           {errorMessage && (
-            <div className="flex items-center gap-2 p-3 text-sm bg-destructive/10 border border-destructive/20 text-destructive rounded-md">
+            <div className="flex items-center gap-2 p-3 text-xs bg-destructive/10 border border-destructive/20 text-destructive rounded-lg">
               <AlertCircle size={16} />
               <span>{errorMessage}</span>
             </div>
@@ -207,7 +216,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                 Route ID <span className="text-destructive">*</span>
               </label>
               <input
@@ -217,15 +226,15 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
                 onChange={(e) => setRouteId(e.target.value)}
                 placeholder="e.g. users-service"
                 required
-                className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background font-mono focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
+                className="w-full border border-kairo-cream-border rounded-lg px-3 py-2 text-sm bg-kairo-cream/30 font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green disabled:opacity-60"
               />
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-[10px] text-muted-foreground mt-0.5">
                 {isEdit ? 'Immutable route identifier.' : 'Unique identifier for this route.'}
               </p>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                 Route Name <span className="text-destructive">*</span>
               </label>
               <input
@@ -234,15 +243,15 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Users API Service"
                 required
-                className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full border border-kairo-cream-border rounded-lg px-3 py-2 text-sm bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold mb-1">
-                Path Pattern <span className="text-destructive">*</span>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                Ingress Path Pattern <span className="text-destructive">*</span>
               </label>
               <input
                 type="text"
@@ -250,15 +259,15 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
                 onChange={(e) => setPathPattern(e.target.value)}
                 placeholder={tenantSlug ? `/${tenantSlug}/users/**` : '/users/**'}
                 required
-                className="w-full border border-input rounded-md px-3 py-2 text-sm font-mono bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full border border-kairo-cream-border rounded-lg px-3 py-2 text-sm font-mono bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green"
               />
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-[10px] text-muted-foreground mt-0.5">
                 {tenantSlug && `Must start with /${tenantSlug}/`}
               </p>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                 Target Path Prefix <span className="text-destructive">*</span>
               </label>
               <input
@@ -267,13 +276,13 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
                 onChange={(e) => setTargetPathPrefix(e.target.value)}
                 placeholder="/api/v1"
                 required
-                className="w-full border border-input rounded-md px-3 py-2 text-sm font-mono bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full border border-kairo-cream-border rounded-lg px-3 py-2 text-sm font-mono bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold mb-1">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
               Target Base URL <span className="text-destructive">*</span>
             </label>
             <input
@@ -282,13 +291,13 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
               onChange={(e) => setTargetBaseUrl(e.target.value)}
               placeholder="http://users-service:8080"
               required
-              className="w-full border border-input rounded-md px-3 py-2 text-sm font-mono bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full border border-kairo-cream-border rounded-lg px-3 py-2 text-sm font-mono bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green"
             />
           </div>
 
           {/* Allowed HTTP Methods */}
           <div>
-            <label className="block text-xs font-semibold mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
               Allowed HTTP Methods <span className="text-destructive">*</span>
             </label>
             <div className="flex flex-wrap gap-2">
@@ -299,10 +308,10 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
                     key={method}
                     type="button"
                     onClick={() => toggleMethod(method)}
-                    className={`px-3 py-1 rounded text-xs font-mono font-semibold border transition ${
+                    className={`px-3 py-1 rounded-lg text-xs font-mono font-bold border transition ${
                       selected
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'border-border bg-muted/50 text-muted-foreground hover:bg-accent'
+                        ? 'bg-kairo-navy text-white border-kairo-navy shadow-xs'
+                        : 'border-kairo-cream-border bg-kairo-cream text-kairo-navy hover:bg-kairo-cream-border'
                     }`}
                   >
                     {method}
@@ -315,8 +324,8 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
           {/* Rate limits & timeout */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold mb-1">
-                Requests Per Minute (Rate Limit) <span className="text-destructive">*</span>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                Requests Per Minute <span className="text-destructive">*</span>
               </label>
               <input
                 type="number"
@@ -324,12 +333,12 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
                 value={requestsPerMinute}
                 onChange={(e) => setRequestsPerMinute(Number(e.target.value))}
                 required
-                className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full border border-kairo-cream-border rounded-lg px-3 py-2 text-sm bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                 Response Timeout (ms) <span className="text-destructive">*</span>
               </label>
               <input
@@ -338,7 +347,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
                 value={responseTimeoutMs}
                 onChange={(e) => setResponseTimeoutMs(Number(e.target.value))}
                 required
-                className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full border border-kairo-cream-border rounded-lg px-3 py-2 text-sm bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green"
               />
             </div>
           </div>
@@ -350,7 +359,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
                 type="checkbox"
                 checked={active}
                 onChange={(e) => setActive(e.target.checked)}
-                className="rounded border-input text-primary focus:ring-ring"
+                className="rounded border-kairo-cream-border text-kairo-green focus:ring-kairo-green"
               />
               <span>Route Active</span>
             </label>
@@ -360,47 +369,47 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
                 type="checkbox"
                 checked={idempotencyEnabled}
                 onChange={(e) => setIdempotencyEnabled(e.target.checked)}
-                className="rounded border-input text-primary focus:ring-ring"
+                className="rounded border-kairo-cream-border text-kairo-green focus:ring-kairo-green"
               />
               <span>Idempotency Enabled</span>
             </label>
           </div>
 
           {/* Header Rules Section */}
-          <div className="pt-2 border-t border-border">
+          <div className="pt-3 border-t border-kairo-cream-border">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-kairo-navy">
                   Header Transformation Rules
                 </h3>
                 <p className="text-[11px] text-muted-foreground">
-                  Inject or strip headers on incoming requests or outgoing responses.
+                  Inject or strip headers on incoming requests or outgoing responses
                 </p>
               </div>
               <button
                 type="button"
                 onClick={addHeaderRule}
-                className="flex items-center gap-1 text-xs font-medium bg-muted hover:bg-accent px-2.5 py-1 rounded-md border border-border transition"
+                className="flex items-center gap-1 text-xs font-semibold bg-kairo-cream hover:bg-kairo-cream-dark text-kairo-navy px-3 py-1.5 rounded-lg border border-kairo-cream-border transition"
               >
-                <Plus size={14} /> Add Rule
+                <Plus size={14} className="text-kairo-green" /> Add Rule
               </button>
             </div>
 
             {headerRules.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic bg-muted/40 p-3 rounded border border-border/50 text-center">
-                No header rules added. Click "Add Rule" to configure request/response header rules.
+              <p className="text-xs text-muted-foreground italic bg-kairo-cream/40 p-3.5 rounded-lg border border-kairo-cream-border/60 text-center">
+                No header rules added. Click "Add Rule" to configure custom headers.
               </p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {headerRules.map((rule, idx) => (
                   <div
                     key={idx}
-                    className="flex flex-col sm:flex-row items-center gap-2 p-2.5 bg-muted/40 rounded-md border border-border"
+                    className="flex flex-col sm:flex-row items-center gap-2 p-3 bg-kairo-cream/40 rounded-lg border border-kairo-cream-border"
                   >
                     <select
                       value={rule.direction}
                       onChange={(e) => updateHeaderRule(idx, 'direction', e.target.value)}
-                      className="text-xs font-semibold border border-input rounded px-2 py-1.5 bg-background focus:outline-none"
+                      className="text-xs font-semibold border border-kairo-cream-border rounded-lg px-2.5 py-1.5 bg-white text-kairo-navy focus:outline-none"
                     >
                       <option value="REQUEST">REQUEST</option>
                       <option value="RESPONSE">RESPONSE</option>
@@ -409,7 +418,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
                     <select
                       value={rule.action}
                       onChange={(e) => updateHeaderRule(idx, 'action', e.target.value)}
-                      className="text-xs font-semibold border border-input rounded px-2 py-1.5 bg-background focus:outline-none"
+                      className="text-xs font-semibold border border-kairo-cream-border rounded-lg px-2.5 py-1.5 bg-white text-kairo-navy focus:outline-none"
                     >
                       <option value="ADD">ADD</option>
                       <option value="REMOVE">REMOVE</option>
@@ -417,10 +426,10 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
 
                     <input
                       type="text"
-                      placeholder="Header Name (e.g. X-Tenant-Id)"
+                      placeholder="Header Name"
                       value={rule.headerName}
                       onChange={(e) => updateHeaderRule(idx, 'headerName', e.target.value)}
-                      className="flex-1 text-xs font-mono border border-input rounded px-2.5 py-1.5 bg-background focus:outline-none"
+                      className="flex-1 text-xs font-mono border border-kairo-cream-border rounded-lg px-3 py-1.5 bg-white focus:outline-none"
                       required
                     />
 
@@ -430,7 +439,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
                         placeholder="Header Value"
                         value={rule.headerValue || ''}
                         onChange={(e) => updateHeaderRule(idx, 'headerValue', e.target.value)}
-                        className="flex-1 text-xs font-mono border border-input rounded px-2.5 py-1.5 bg-background focus:outline-none"
+                        className="flex-1 text-xs font-mono border border-kairo-cream-border rounded-lg px-3 py-1.5 bg-white focus:outline-none"
                         required
                       />
                     )}
@@ -438,7 +447,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
                     <button
                       type="button"
                       onClick={() => removeHeaderRule(idx)}
-                      className="text-muted-foreground hover:text-destructive p-1 rounded transition"
+                      className="text-muted-foreground hover:text-destructive p-1.5 rounded-lg transition hover:bg-destructive/10"
                       title="Remove Rule"
                     >
                       <Trash2 size={15} />
@@ -450,18 +459,18 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
           </div>
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-kairo-cream-border">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-border text-xs font-medium rounded-md hover:bg-accent transition"
+              className="px-4 py-2 border border-kairo-cream-border text-xs font-semibold rounded-lg hover:bg-kairo-cream transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold rounded-md hover:opacity-90 disabled:opacity-50 transition"
+              className="bg-kairo-navy hover:bg-kairo-navy-light text-white px-5 py-2 text-xs font-semibold rounded-lg shadow-sm hover:shadow transition disabled:opacity-50"
             >
               {isPending ? 'Saving Route…' : isEdit ? 'Save Route Changes' : 'Create Route'}
             </button>

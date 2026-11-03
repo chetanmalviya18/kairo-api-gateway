@@ -4,13 +4,13 @@ import { getRoute } from '@/features/routes/routeApi'
 import { ArrowLeft, Settings2 } from 'lucide-react'
 
 const DIRECTION_COLOR: Record<string, string> = {
-  REQUEST: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-500/20',
-  RESPONSE: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-500/20',
+  REQUEST: 'bg-kairo-navy/10 text-kairo-navy border-kairo-navy/20',
+  RESPONSE: 'bg-indigo-500/10 text-indigo-700 border-indigo-500/20',
 }
 
 const ACTION_COLOR: Record<string, string> = {
-  ADD: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-500/20',
-  REMOVE: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-500/20',
+  ADD: 'bg-kairo-green/10 text-kairo-green border-kairo-green/20',
+  REMOVE: 'bg-rose-500/10 text-rose-700 border-rose-500/20',
 }
 
 export default function HeaderRulesPage() {
@@ -27,40 +27,40 @@ export default function HeaderRulesPage() {
     <div className="space-y-6 max-w-4xl">
       <button
         onClick={() => navigate('/tenant/routes')}
-        className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-sm font-medium transition"
+        className="flex items-center gap-1.5 text-muted-foreground hover:text-kairo-navy text-xs font-semibold transition"
       >
         <ArrowLeft size={16} /> Back to Routes
       </button>
 
       <div>
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <Settings2 size={20} className="text-primary" />
+        <h1 className="text-2xl font-bold tracking-tight text-kairo-navy flex items-center gap-2.5">
+          <Settings2 size={24} className="text-kairo-green" />
           <span>Header Transformation Rules</span>
         </h1>
         {route && (
-          <p className="text-muted-foreground text-sm mt-0.5">
-            Route: <span className="font-semibold text-foreground">{route.name}</span> (
+          <p className="text-muted-foreground text-xs mt-1">
+            Route: <span className="font-bold text-kairo-navy">{route.name}</span> (
             <span className="font-mono text-xs">{route.routeId}</span>) • Path Pattern:{' '}
-            <span className="font-mono text-xs font-semibold">{route.pathPattern}</span>
+            <span className="font-mono text-xs font-semibold text-kairo-navy">{route.pathPattern}</span>
           </p>
         )}
       </div>
 
       {isLoading && (
-        <div className="p-8 text-center text-sm text-muted-foreground animate-pulse">
-          Loading header rules…
+        <div className="p-10 text-center text-xs text-muted-foreground animate-pulse">
+          Loading header transformation rules…
         </div>
       )}
 
       {route && (
-        <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
+        <div className="bg-white border border-kairo-cream-border rounded-xl shadow-sm overflow-hidden">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-border bg-muted/50 text-muted-foreground font-semibold">
-                <th className="text-left px-4 py-3">Direction</th>
-                <th className="text-left px-4 py-3">Action</th>
-                <th className="text-left px-4 py-3">Header Name</th>
-                <th className="text-left px-4 py-3">Header Value</th>
+              <tr className="border-b border-kairo-cream-border bg-kairo-cream/60 text-kairo-navy font-semibold">
+                <th className="text-left px-5 py-3.5">Direction</th>
+                <th className="text-left px-5 py-3.5">Action</th>
+                <th className="text-left px-5 py-3.5">Header Name</th>
+                <th className="text-left px-5 py-3.5">Header Value</th>
               </tr>
             </thead>
             <tbody>
@@ -70,28 +70,28 @@ export default function HeaderRulesPage() {
                 return (
                   <tr
                     key={rule.id ?? idx}
-                    className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
+                    className="border-b border-kairo-cream-border last:border-0 hover:bg-kairo-cream/30 transition-colors"
                   >
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3.5">
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                        className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
                           DIRECTION_COLOR[rule.direction] || 'bg-muted text-muted-foreground'
                         }`}
                       >
                         {rule.direction}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3.5">
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                        className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
                           ACTION_COLOR[rule.action] || 'bg-muted text-muted-foreground'
                         }`}
                       >
                         {rule.action}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-mono font-medium">{headerName}</td>
-                    <td className="px-4 py-3 font-mono text-muted-foreground">
+                    <td className="px-5 py-3.5 font-mono font-semibold text-kairo-navy">{headerName}</td>
+                    <td className="px-5 py-3.5 font-mono text-muted-foreground">
                       {headerValue || '—'}
                     </td>
                   </tr>
@@ -99,7 +99,7 @@ export default function HeaderRulesPage() {
               })}
               {route.headerRules.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                  <td colSpan={4} className="px-5 py-10 text-center text-muted-foreground">
                     No header transformation rules configured for this route.
                   </td>
                 </tr>

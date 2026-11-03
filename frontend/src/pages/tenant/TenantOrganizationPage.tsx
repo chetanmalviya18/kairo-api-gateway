@@ -19,31 +19,23 @@ import {
 
 const STATUS_CONFIG: Record<
   Organization['status'],
-  { label: string; bg: string; text: string; border: string }
+  { label: string; badgeClass: string }
 > = {
   ACTIVE: {
     label: 'ACTIVE',
-    bg: 'bg-green-500/10',
-    text: 'text-green-600 dark:text-green-400',
-    border: 'border-green-500/20',
+    badgeClass: 'bg-kairo-green/10 text-kairo-green border-kairo-green/20',
   },
   PENDING: {
     label: 'PENDING',
-    bg: 'bg-yellow-500/10',
-    text: 'text-yellow-600 dark:text-yellow-400',
-    border: 'border-yellow-500/20',
+    badgeClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
   },
   SUSPENDED: {
     label: 'SUSPENDED',
-    bg: 'bg-red-500/10',
-    text: 'text-red-600 dark:text-red-400',
-    border: 'border-red-500/20',
+    badgeClass: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20',
   },
   DELETED: {
     label: 'DELETED',
-    bg: 'bg-gray-500/10',
-    text: 'text-gray-600 dark:text-gray-400',
-    border: 'border-gray-500/20',
+    badgeClass: 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20',
   },
 }
 
@@ -101,7 +93,7 @@ export default function TenantOrganizationPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
-        <div className="text-muted-foreground text-sm animate-pulse">
+        <div className="text-muted-foreground text-xs animate-pulse">
           Loading organization details…
         </div>
       </div>
@@ -110,9 +102,9 @@ export default function TenantOrganizationPage() {
 
   if (isError || !organization) {
     return (
-      <div className="p-6 bg-card border border-destructive/20 text-destructive rounded-lg max-w-xl">
-        <p className="font-semibold">Unable to load organization</p>
-        <p className="text-sm mt-1">
+      <div className="p-6 bg-white border border-destructive/20 text-destructive rounded-xl max-w-xl shadow-sm">
+        <p className="font-semibold text-sm">Unable to load organization</p>
+        <p className="text-xs mt-1">
           {(error as any)?.response?.data?.message || 'Could not fetch your organization profile.'}
         </p>
       </div>
@@ -124,21 +116,21 @@ export default function TenantOrganizationPage() {
   return (
     <div className="max-w-4xl space-y-6">
       {/* Title & Status Summary Card */}
-      <div className="bg-card border border-border rounded-lg p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white border border-kairo-cream-border rounded-xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xl">
+          <div className="w-12 h-12 rounded-xl bg-kairo-navy text-white flex items-center justify-center font-bold text-xl shadow-md">
             <Building2 size={24} />
           </div>
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl font-bold">{organization.name}</h1>
+              <h1 className="text-2xl font-bold text-kairo-navy">{organization.name}</h1>
               <span
-                className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${statusStyle.badgeClass}`}
               >
                 {statusStyle.label}
               </span>
             </div>
-            <p className="text-muted-foreground text-sm font-mono mt-0.5">
+            <p className="text-muted-foreground text-xs font-mono mt-0.5">
               slug: /{organization.slug} • id: #{organization.id}
             </p>
           </div>
@@ -147,14 +139,14 @@ export default function TenantOrganizationPage() {
 
       {/* Notifications */}
       {successMessage && (
-        <div className="flex items-center gap-2 p-4 text-sm bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 rounded-lg">
+        <div className="flex items-center gap-2 p-4 text-xs font-medium bg-kairo-green/10 border border-kairo-green/20 text-kairo-green rounded-xl">
           <CheckCircle2 size={18} />
           <span>{successMessage}</span>
         </div>
       )}
 
       {errorMessage && (
-        <div className="flex items-center gap-2 p-4 text-sm bg-destructive/10 border border-destructive/20 text-destructive rounded-lg">
+        <div className="flex items-center gap-2 p-4 text-xs font-medium bg-destructive/10 border border-destructive/20 text-destructive rounded-xl">
           <AlertCircle size={18} />
           <span>{errorMessage}</span>
         </div>
@@ -163,41 +155,43 @@ export default function TenantOrganizationPage() {
       {/* Main Grid: Edit Form & Metadata */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Organization Form */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-lg p-6 shadow-sm">
-          <div className="flex items-center gap-2 pb-4 mb-5 border-b border-border">
-            <ShieldCheck size={18} className="text-muted-foreground" />
-            <h2 className="text-base font-semibold">Organization Profile</h2>
+        <div className="lg:col-span-2 bg-white border border-kairo-cream-border rounded-xl p-6 shadow-sm">
+          <div className="flex items-center gap-2 pb-4 mb-5 border-b border-kairo-cream-border">
+            <ShieldCheck size={18} className="text-kairo-green" />
+            <h2 className="text-sm font-bold text-kairo-navy">Organization Profile</h2>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
                 Organization Name <span className="text-destructive">*</span>
               </label>
               <input
                 type="text"
-                className="w-full border border-input rounded-md px-3.5 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full border border-kairo-cream-border rounded-lg px-3.5 py-2.5 text-sm bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green transition"
                 value={form.name}
                 maxLength={150}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
               />
-              <p className="text-xs text-muted-foreground mt-1">Maximum 150 characters.</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Maximum 150 characters.</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1.5">Organization Slug</label>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+                Organization Slug
+              </label>
               <div className="relative">
                 <input
                   type="text"
                   readOnly
                   disabled
                   value={organization.slug}
-                  className="w-full border border-input font-mono text-xs rounded-md pl-3.5 pr-8 py-2 bg-muted text-muted-foreground cursor-not-allowed select-none"
+                  className="w-full border border-kairo-cream-border font-mono text-xs rounded-lg pl-3.5 pr-8 py-2.5 bg-kairo-cream text-muted-foreground cursor-not-allowed select-none"
                 />
-                <Lock size={14} className="absolute right-3 top-2.5 text-muted-foreground" />
+                <Lock size={14} className="absolute right-3 top-3 text-muted-foreground" />
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-[11px] text-muted-foreground mt-1">
                 Your API gateway routes are prefixed with <span className="font-mono">/{organization.slug}/</span>. Slug changes must be requested through platform administration.
               </p>
             </div>
@@ -206,7 +200,7 @@ export default function TenantOrganizationPage() {
               <button
                 type="button"
                 onClick={() => setForm({ name: organization.name })}
-                className="px-4 py-2 border border-border text-sm font-medium rounded-md hover:bg-accent transition"
+                className="px-4 py-2 border border-kairo-cream-border text-xs font-semibold rounded-lg hover:bg-kairo-cream transition"
               >
                 Reset
               </button>
@@ -214,9 +208,9 @@ export default function TenantOrganizationPage() {
               <button
                 type="submit"
                 disabled={updateMutation.isPending || form.name === organization.name}
-                className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 disabled:opacity-50 transition"
+                className="flex items-center gap-2 bg-kairo-navy hover:bg-kairo-navy-light text-white px-5 py-2 rounded-lg text-xs font-semibold shadow-sm transition disabled:opacity-50"
               >
-                <Save size={16} />
+                <Save size={15} />
                 {updateMutation.isPending ? 'Saving changes…' : 'Save Changes'}
               </button>
             </div>
@@ -224,28 +218,28 @@ export default function TenantOrganizationPage() {
         </div>
 
         {/* Metadata Card */}
-        <div className="bg-card border border-border rounded-lg p-6 shadow-sm space-y-5 h-fit">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground border-b border-border pb-3">
+        <div className="bg-white border border-kairo-cream-border rounded-xl p-6 shadow-sm space-y-5 h-fit">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-kairo-navy border-b border-kairo-cream-border pb-3">
             Tenant Information
           </h3>
 
-          <div className="space-y-4 text-sm">
+          <div className="space-y-4 text-xs">
             <div>
-              <span className="text-xs text-muted-foreground block mb-0.5">Organization ID</span>
-              <span className="font-mono font-medium">#{organization.id}</span>
+              <span className="text-[11px] text-muted-foreground block mb-0.5">Organization ID</span>
+              <span className="font-mono font-bold text-kairo-navy text-sm">#{organization.id}</span>
             </div>
 
             <div>
-              <span className="text-xs text-muted-foreground block mb-0.5">Route Prefix</span>
-              <span className="font-mono text-xs font-semibold px-2 py-1 bg-muted rounded">
+              <span className="text-[11px] text-muted-foreground block mb-0.5">Route Ingress Prefix</span>
+              <span className="font-mono text-xs font-bold text-kairo-navy px-2.5 py-1 bg-kairo-cream rounded-md border border-kairo-cream-border inline-block">
                 /{organization.slug}/*
               </span>
             </div>
 
             <div className="flex items-start gap-2.5">
-              <Calendar size={16} className="text-muted-foreground mt-0.5 shrink-0" />
+              <Calendar size={16} className="text-kairo-green mt-0.5 shrink-0" />
               <div>
-                <span className="text-xs text-muted-foreground block">Created At</span>
+                <span className="text-[11px] text-muted-foreground block">Created At</span>
                 <span className="font-medium">
                   {new Date(organization.createdAt).toLocaleString()}
                 </span>
@@ -253,9 +247,9 @@ export default function TenantOrganizationPage() {
             </div>
 
             <div className="flex items-start gap-2.5">
-              <Clock size={16} className="text-muted-foreground mt-0.5 shrink-0" />
+              <Clock size={16} className="text-kairo-navy mt-0.5 shrink-0" />
               <div>
-                <span className="text-xs text-muted-foreground block">Last Updated</span>
+                <span className="text-[11px] text-muted-foreground block">Last Updated</span>
                 <span className="font-medium">
                   {new Date(organization.updatedAt).toLocaleString()}
                 </span>

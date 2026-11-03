@@ -46,9 +46,20 @@ export default {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        kairo: {
+          navy: '#003566',
+          'navy-light': '#004c8f',
+          'navy-dark': '#002347',
+          green: '#386641',
+          'green-light': '#478253',
+          'green-dark': '#294c30',
+          'green-soft': '#e8efe9',
+          cream: '#fffcf2',
+          'cream-dark': '#f4efe0',
+          'cream-border': '#e6dec9',
+        },
       },
     },
   },
   plugins: [],
 }
-
