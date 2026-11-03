@@ -34,17 +34,17 @@ export interface TenantAdminRequest {
 // ── Platform: Organizations ──────────────────────────────────────────────────
 
 export const getOrganizations = async (): Promise<Organization[]> => {
-  const res = await apiClient.get<Organization[]>('/platform/organizations')
+  const res = await apiClient.get<Organization[]>('/api/platform/organization')
   return res.data
 }
 
 export const getOrganization = async (id: number): Promise<Organization> => {
-  const res = await apiClient.get<Organization>(`/platform/organizations/${id}`)
+  const res = await apiClient.get<Organization>(`/api/platform/organization/${id}`)
   return res.data
 }
 
 export const createOrganization = async (data: OrganizationRequest): Promise<Organization> => {
-  const res = await apiClient.post<Organization>('/platform/organizations', data)
+  const res = await apiClient.post<Organization>('/api/platform/organization', data)
   return res.data
 }
 
@@ -52,7 +52,7 @@ export const updateOrganization = async (
   id: number,
   data: OrganizationRequest
 ): Promise<Organization> => {
-  const res = await apiClient.put<Organization>(`/platform/organizations/${id}`, data)
+  const res = await apiClient.put<Organization>(`/api/platform/organization/${id}`, data)
   return res.data
 }
 
@@ -60,18 +60,18 @@ export const changeOrganizationStatus = async (
   id: number,
   data: OrganizationStatusRequest
 ): Promise<Organization> => {
-  const res = await apiClient.patch<Organization>(`/platform/organizations/${id}/status`, data)
+  const res = await apiClient.patch<Organization>(`/api/platform/organization/${id}/status`, data)
   return res.data
 }
 
 export const deleteOrganization = async (id: number): Promise<void> => {
-  await apiClient.delete(`/platform/organizations/${id}`)
+  await apiClient.delete(`/api/platform/organization/${id}`)
 }
 
 // ── Platform: Tenant Admins ──────────────────────────────────────────────────
 
 export const getTenantAdmin = async (orgId: number): Promise<TenantAdmin> => {
-  const res = await apiClient.get<TenantAdmin>(`/platform/organizations/${orgId}/admin`)
+  const res = await apiClient.get<TenantAdmin>(`/api/platform/organization/${orgId}/tenant-admin`)
   return res.data
 }
 
@@ -79,7 +79,7 @@ export const createTenantAdmin = async (
   orgId: number,
   data: TenantAdminRequest
 ): Promise<TenantAdmin> => {
-  const res = await apiClient.post<TenantAdmin>(`/platform/organizations/${orgId}/admin`, data)
+  const res = await apiClient.post<TenantAdmin>(`/api/platform/organization/${orgId}/tenant-admin`, data)
   return res.data
 }
 
@@ -87,11 +87,10 @@ export const updateTenantAdmin = async (
   orgId: number,
   data: TenantAdminRequest
 ): Promise<TenantAdmin> => {
-  const res = await apiClient.put<TenantAdmin>(`/platform/organizations/${orgId}/admin`, data)
+  const res = await apiClient.put<TenantAdmin>(`/api/platform/organization/${orgId}/tenant-admin`, data)
   return res.data
 }
 
 export const deleteTenantAdmin = async (orgId: number): Promise<void> => {
-  await apiClient.delete(`/platform/organizations/${orgId}/admin`)
+  await apiClient.delete(`/api/platform/organization/${orgId}/tenant-admin`)
 }
-

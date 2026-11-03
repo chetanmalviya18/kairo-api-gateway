@@ -12,7 +12,6 @@ export interface LoginResponse {
 }
 
 export const login = async (data: LoginRequest): Promise<LoginResponse> => {
-  const res = await apiClient.post<LoginResponse>('/auth/login', data)
+  const res = await apiClient.post<LoginResponse>('/api/auth/login', data)
   return res.data
 }
-
