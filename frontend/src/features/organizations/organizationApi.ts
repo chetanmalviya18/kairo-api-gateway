@@ -35,6 +35,10 @@ export interface TenantAdminStatusRequest {
   enabled: boolean
 }
 
+export interface TenantOrganizationRequest {
+  name: string
+}
+
 // ── Platform: Organizations ──────────────────────────────────────────────────
 
 export const getOrganizations = async (): Promise<Organization[]> => {
@@ -109,4 +113,18 @@ export const changeTenantAdminStatus = async (
 
 export const deleteTenantAdmin = async (orgId: number): Promise<void> => {
   await apiClient.delete(`/api/platform/organization/${orgId}/tenant-admin`)
+}
+
+// ── Tenant: Organization ─────────────────────────────────────────────────────
+
+export const getTenantOrganization = async (): Promise<Organization> => {
+  const res = await apiClient.get<Organization>('/api/tenant/organization')
+  return res.data
+}
+
+export const updateTenantOrganization = async (
+  data: TenantOrganizationRequest
+): Promise<Organization> => {
+  const res = await apiClient.put<Organization>('/api/tenant/organization', data)
+  return res.data
 }

@@ -9,6 +9,7 @@ import OrganizationDetailPage from '@/pages/platform/OrganizationDetailPage'
 import TenantAdminsPage from '@/pages/platform/TenantAdminsPage'
 
 import TenantLayout from '@/pages/tenant/TenantLayout'
+import TenantOrganizationPage from '@/pages/tenant/TenantOrganizationPage'
 import RoutesPage from '@/pages/tenant/RoutesPage'
 import HeaderRulesPage from '@/pages/tenant/HeaderRulesPage'
 
@@ -41,7 +42,8 @@ const router = createBrowserRouter([
         path: '/tenant',
         element: <TenantLayout />,
         children: [
-          { index: true, element: <Navigate to="routes" replace /> },
+          { index: true, element: <Navigate to="organization" replace /> },
+          { path: 'organization', element: <TenantOrganizationPage /> },
           { path: 'routes', element: <RoutesPage /> },
           { path: 'routes/:routeId/header-rules', element: <HeaderRulesPage /> },
         ],
