@@ -3,6 +3,7 @@ package in.kairo.apigateway.management.controller;
 import in.kairo.apigateway.management.dto.requestDto.OrganizationRequest;
 import in.kairo.apigateway.management.dto.requestDto.OrganizationStatusRequest;
 import in.kairo.apigateway.management.dto.requestDto.TenantAdminRequest;
+import in.kairo.apigateway.management.dto.requestDto.TenantAdminStatusRequest;
 import in.kairo.apigateway.management.dto.responseDto.OrganizationResponse;
 import in.kairo.apigateway.management.dto.responseDto.TenantAdminResponse;
 import in.kairo.apigateway.management.service.OrganizationService;
@@ -78,6 +79,13 @@ public class PlatformOrganizationController {
     public ResponseEntity<TenantAdminResponse> updateTenantAdmin(@PathVariable Long organizationId,
                                                                  @Valid @RequestBody TenantAdminRequest tenantAdminRequest) {
         return ResponseEntity.ok(organizationService.updateTenantAdmin(organizationId, tenantAdminRequest));
+    }
+
+    @PatchMapping("/{organizationId}/tenant-admin/{id}/status")
+    public ResponseEntity<TenantAdminResponse> changeTenantStatus(@PathVariable Long organizationId,
+                                                                  @PathVariable(required = false) Long id,
+                                                                  @RequestBody TenantAdminStatusRequest request) {
+        return ResponseEntity.ok(organizationService.changeTenantStatus(organizationId, request));
     }
 
     @DeleteMapping("/{organizationId}/tenant-admin")

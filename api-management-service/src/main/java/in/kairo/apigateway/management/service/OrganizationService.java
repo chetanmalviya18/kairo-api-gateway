@@ -1,9 +1,6 @@
 package in.kairo.apigateway.management.service;
 
-import in.kairo.apigateway.management.dto.requestDto.OrganizationRequest;
-import in.kairo.apigateway.management.dto.requestDto.OrganizationStatusRequest;
-import in.kairo.apigateway.management.dto.requestDto.TenantAdminRequest;
-import in.kairo.apigateway.management.dto.requestDto.TenantOrganizationRequest;
+import in.kairo.apigateway.management.dto.requestDto.*;
 import in.kairo.apigateway.management.dto.responseDto.OrganizationResponse;
 import in.kairo.apigateway.management.dto.responseDto.TenantAdminResponse;
 import in.kairo.apigateway.management.entity.ManagementUser;
@@ -185,10 +182,26 @@ public class OrganizationService {
         user.setUpdatedAt(LocalDateTime.now());
 
         auditService.record(user.getOrganization(), "UPDATE_TENANT_ADMIN", "MANAGEMENT_USER",
-                user.getOrganization().getId().toString(), startedAt,
+                user.getId().toString(), startedAt,
                 "Tenant administrator updated");
 
         return TenantAdminResponse.from(user);
+    }
+
+    @Transactional
+    public TenantAdminResponse changeTenantStatus(Long organizationId, TenantAdminStatusRequest tenantAdminStatusRequest) {
+        long startedAt = System.nanoTime();
+        ManagementUser user = getTenantAdminEntity(organizationId);
+
+        user.setEnabled(tenantAdminStatusRequest.isEnabled());
+        user.setUpdatedAt(LocalDateTime.now());
+
+        auditService.record(user.getOrganization(), "UPDATE_TENANT_ADMIN_STATUS", "MANAGEMENT_USER",
+                user.getId().toString(), startedAt,
+                "Tenant administrator status updated");
+
+        return TenantAdminResponse.from(user);
+
     }
 
     @Transactional
@@ -260,4 +273,6 @@ public class OrganizationService {
 
         return OrganizationResponse.from(organization);
     }
+
+
 }
