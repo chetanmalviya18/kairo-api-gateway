@@ -31,6 +31,10 @@ export interface TenantAdminRequest {
   enabled: boolean
 }
 
+export interface TenantAdminStatusRequest {
+  enabled: boolean
+}
+
 // ── Platform: Organizations ──────────────────────────────────────────────────
 
 export const getOrganizations = async (): Promise<Organization[]> => {
@@ -88,6 +92,18 @@ export const updateTenantAdmin = async (
   data: TenantAdminRequest
 ): Promise<TenantAdmin> => {
   const res = await apiClient.put<TenantAdmin>(`/api/platform/organization/${orgId}/tenant-admin`, data)
+  return res.data
+}
+
+export const changeTenantAdminStatus = async (
+  orgId: number,
+  adminId: number,
+  data: TenantAdminStatusRequest
+): Promise<TenantAdmin> => {
+  const res = await apiClient.patch<TenantAdmin>(
+    `/api/platform/organization/${orgId}/tenant-admin/${adminId}/status`,
+    data
+  )
   return res.data
 }
 
