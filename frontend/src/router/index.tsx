@@ -5,6 +5,7 @@ import LoginPage from '@/pages/LoginPage'
 
 import PlatformLayout from '@/pages/platform/PlatformLayout'
 import OrganizationsPage from '@/pages/platform/OrganizationsPage'
+import OrganizationDetailPage from '@/pages/platform/OrganizationDetailPage'
 import TenantAdminsPage from '@/pages/platform/TenantAdminsPage'
 
 import TenantLayout from '@/pages/tenant/TenantLayout'
@@ -25,6 +26,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="organizations" replace /> },
           { path: 'organizations', element: <OrganizationsPage /> },
+          { path: 'organizations/:orgId', element: <OrganizationDetailPage /> },
           { path: 'organizations/:orgId/admin', element: <TenantAdminsPage /> },
         ],
       },
