@@ -7,8 +7,10 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string
+  tokenType: string
+  expiresInSeconds: number
   role: string
-  username: string
+  organizationId: number | null
 }
 
 export const login = async (data: LoginRequest): Promise<LoginResponse> => {

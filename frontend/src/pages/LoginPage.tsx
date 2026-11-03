@@ -14,12 +14,14 @@ export default function LoginPage() {
 
   const { mutate, isPending, error } = useMutation({
     mutationFn: login,
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       dispatch(
         setCredentials({
           token: data.token,
+          tokenType: data.tokenType,
           role: data.role as 'PLATFORM_ADMIN' | 'TENANT_ADMIN',
-          username: data.username,
+          username: variables.username,
+          organizationId: data.organizationId,
         })
       )
       if (data.role === 'PLATFORM_ADMIN') navigate('/platform')
@@ -78,4 +80,3 @@ export default function LoginPage() {
     </div>
   )
 }
-
