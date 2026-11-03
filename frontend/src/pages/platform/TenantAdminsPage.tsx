@@ -9,7 +9,7 @@ import {
   deleteTenantAdmin,
   type TenantAdminRequest,
 } from '@/features/organizations/organizationApi'
-import { ArrowLeft, Pencil, Trash2, ToggleLeft, ToggleRight, UserCheck, UserX, KeyRound } from 'lucide-react'
+import { Pencil, Trash2, ToggleLeft, ToggleRight, ArrowLeft } from 'lucide-react'
 
 export default function TenantAdminsPage() {
   const { orgId } = useParams<{ orgId: string }>()
@@ -59,14 +59,14 @@ export default function TenantAdminsPage() {
       queryClient.setQueryData(['tenant-admin', id], updated)
       queryClient.invalidateQueries({ queryKey: ['tenant-admin', id] })
     },
-    onError: (err: any) => {
-      alert(err.response?.data?.message || err.message || 'Failed to change admin status')
-    },
   })
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteTenantAdmin(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tenant-admin', id] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenant-admin', id] })
+      setShowForm(false)
+    },
   })
 
   const openCreate = () => {
@@ -87,192 +87,252 @@ export default function TenantAdminsPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMsg(null)
-    if (isEdit) updateMutation.mutate(form)
-    else createMutation.mutate(form)
+
+    if (!form.username.trim()) {
+      setErrorMsg('Username is required.')
+      return
+    }
+
+    if (!isEdit && (!form.password || form.password.length < 8)) {
+      setErrorMsg('Password must be at least 8 characters.')
+      return
+    }
+
+    if (isEdit) {
+      updateMutation.mutate(form)
+    } else {
+      createMutation.mutate(form)
+    }
   }
 
-  const noAdmin = error && (error as { response?: { status: number } }).response?.status === 404
+  const noAdmin =
+    !admin && !isLoading && (error as any)?.response?.status === 404
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <section className="page-section">
       <button
-        onClick={() => navigate(`/platform/organizations/${orgId}`)}
-        className="flex items-center gap-1.5 text-muted-foreground hover:text-kairo-navy text-xs font-semibold transition"
+        onClick={() => navigate('/platform/organizations')}
+        className="button button-quiet mb-6 inline-flex items-center gap-2 text-xs"
+        type="button"
       >
-        <ArrowLeft size={16} /> Back to Organization Details
+        <ArrowLeft size={14} /> Back to Organizations
       </button>
 
-      <div className="flex items-center justify-between">
+      {/* Section Heading */}
+      <div className="section-heading">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-kairo-navy flex items-center gap-2">
-            <KeyRound className="text-kairo-green" size={24} />
-            <span>Tenant Administrator</span>
-          </h1>
-          <p className="text-muted-foreground text-xs mt-0.5">Organization #{orgId}</p>
+          <p className="eyebrow">TENANT ACCESS</p>
+          <h1>Tenant administrator</h1>
+          <p className="muted">Manage the primary administrator account for organization #{orgId}.</p>
         </div>
         {(noAdmin || !admin) && !isLoading && (
           <button
             onClick={openCreate}
-            className="bg-kairo-navy hover:bg-kairo-navy-light text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow-sm transition"
+            className="button button-primary"
+            type="button"
           >
-            Assign Tenant Admin
+            + Assign administrator
           </button>
         )}
       </div>
 
-      {/* Form */}
-      {showForm && (
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white border border-kairo-cream-border rounded-xl p-6 shadow-sm space-y-4"
-        >
-          <h3 className="font-bold text-sm text-kairo-navy">
-            {isEdit ? 'Edit Tenant Admin' : 'Assign New Tenant Admin'}
-          </h3>
-
-          {errorMsg && (
-            <p className="text-destructive text-xs bg-destructive/10 p-3 rounded-lg border border-destructive/20">
-              {errorMsg}
-            </p>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                Username <span className="text-destructive">*</span>
-              </label>
-              <input
-                className="w-full border border-kairo-cream-border rounded-lg px-3.5 py-2 text-sm bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green transition"
-                value={form.username}
-                onChange={(e) => setForm({ ...form, username: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                Password {isEdit ? <span className="text-muted-foreground text-[10px] lowercase">(leave blank to keep)</span> : <span className="text-destructive">*</span>}
-              </label>
-              <input
-                type="password"
-                className="w-full border border-kairo-cream-border rounded-lg px-3.5 py-2 text-sm bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green transition"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                required={!isEdit}
-              />
-            </div>
-          </div>
-
-          <label className="flex items-center gap-2 text-xs font-medium cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={form.enabled}
-              onChange={(e) => setForm({ ...form, enabled: e.target.checked })}
-              className="rounded border-kairo-cream-border text-kairo-green focus:ring-kairo-green"
-            />
-            <span>Active / Enabled Account</span>
-          </label>
-
-          <div className="flex gap-3 pt-2">
-            <button
-              type="submit"
-              disabled={createMutation.isPending || updateMutation.isPending}
-              className="bg-kairo-navy hover:bg-kairo-navy-light text-white px-5 py-2 rounded-lg text-xs font-semibold shadow-sm transition disabled:opacity-50"
-            >
-              {createMutation.isPending || updateMutation.isPending ? 'Saving…' : 'Save Administrator'}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setShowForm(false)
-                setErrorMsg(null)
-              }}
-              className="border border-kairo-cream-border px-4 py-2 rounded-lg text-xs font-medium hover:bg-kairo-cream transition"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
-
-      {/* Admin details card */}
-      {isLoading && (
-        <div className="p-8 text-center text-xs text-muted-foreground animate-pulse">
-          Loading admin details…
+      {isLoading ? (
+        <div className="py-12 text-center text-muted text-xs animate-pulse">
+          Loading administrator details…
         </div>
-      )}
+      ) : noAdmin || !admin ? (
+        <div className="table-card p-0">
+          <div className="empty-state">
+            <strong>No administrator assigned</strong>
+            <span>Assign a tenant administrator to enable portal management.</span>
+          </div>
+        </div>
+      ) : (
+        <div className="profile-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2>{admin.username}</h2>
+              <p className="muted text-xs mt-1">Tenant Administrator Account</p>
+            </div>
+            <span
+              className={
+                admin.enabled ? 'status status-active' : 'status status-suspended'
+              }
+            >
+              {admin.enabled ? 'ACTIVE' : 'DISABLED'}
+            </span>
+          </div>
 
-      {admin && (
-        <div className="bg-white border border-kairo-cream-border rounded-xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2.5">
-              <span className="font-bold text-base text-kairo-navy">{admin.username}</span>
-              <span
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
-                  admin.enabled
-                    ? 'bg-kairo-green/10 text-kairo-green border-kairo-green/20'
-                    : 'bg-rose-500/10 text-rose-700 border-rose-500/20'
-                }`}
-              >
-                {admin.enabled ? <UserCheck size={12} /> : <UserX size={12} />}
-                {admin.enabled ? 'Active' : 'Disabled'}
-              </span>
+          <div className="profile-details">
+            <div>
+              <span>ADMINISTRATOR ID</span>
+              <strong className="font-mono">#{admin.id}</strong>
             </div>
 
-            <div className="text-xs text-muted-foreground space-y-0.5">
-              <p>Admin ID: #{admin.id}</p>
-              <p>Created: {new Date(admin.createdAt).toLocaleString()}</p>
+            <div>
+              <span>ORGANIZATION ID</span>
+              <strong className="font-mono">#{orgId}</strong>
+            </div>
+
+            <div>
+              <span>CREATED AT</span>
+              <strong className="font-mono">
+                {admin.createdAt ? new Date(admin.createdAt).toLocaleString() : '—'}
+              </strong>
+            </div>
+
+            <div>
+              <span>ACCOUNT STATUS</span>
+              <strong className="font-mono">{admin.enabled ? 'Enabled' : 'Disabled'}</strong>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="modal-actions mt-6 pt-4 flex gap-2">
+            <button
+              onClick={openEdit}
+              className="button button-quiet"
+              type="button"
+            >
+              <Pencil size={13} /> Edit account
+            </button>
             <button
               onClick={() => statusMutation.mutate(!admin.enabled)}
               disabled={statusMutation.isPending}
-              title={admin.enabled ? 'Click to disable tenant admin' : 'Click to enable tenant admin'}
-              className="flex items-center gap-1.5 text-xs font-semibold border border-kairo-cream-border hover:bg-kairo-cream px-3 py-1.5 rounded-lg transition"
+              className="button button-quiet"
+              type="button"
             >
               {admin.enabled ? (
                 <>
-                  <ToggleRight size={18} className="text-kairo-green" />
-                  <span>Disable</span>
+                  <ToggleRight size={15} className="text-forest-2" />
+                  <span>Disable account</span>
                 </>
               ) : (
                 <>
-                  <ToggleLeft size={18} className="text-muted-foreground" />
-                  <span>Enable</span>
+                  <ToggleLeft size={15} className="text-muted" />
+                  <span>Enable account</span>
                 </>
               )}
             </button>
-
-            <button
-              onClick={openEdit}
-              className="text-muted-foreground hover:text-kairo-navy p-1.5 rounded-lg hover:bg-kairo-cream transition"
-              title="Edit details / password"
-            >
-              <Pencil size={15} />
-            </button>
-
             <button
               onClick={() => {
-                if (window.confirm(`Delete tenant admin "${admin.username}"?`)) {
+                if (window.confirm('Delete this tenant administrator account?')) {
                   deleteMutation.mutate()
                 }
               }}
               disabled={deleteMutation.isPending}
-              className="text-muted-foreground hover:text-destructive p-1.5 rounded-lg hover:bg-destructive/10 transition"
-              title="Delete tenant admin"
+              className="button button-danger"
+              type="button"
             >
-              <Trash2 size={15} />
+              <Trash2 size={13} /> Delete administrator
             </button>
           </div>
         </div>
       )}
 
-      {noAdmin && !showForm && (
-        <div className="bg-white border border-kairo-cream-border rounded-xl p-8 text-center text-muted-foreground text-xs shadow-sm">
-          No tenant administrator assigned yet. Click "Assign Tenant Admin" above to create one.
+      {/* Tenant Admin Dialog Modal */}
+      {showForm && (
+        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <form onSubmit={handleSubmit}>
+              <div className="modal-header">
+                <div>
+                  <p className="eyebrow">TENANT ACCESS</p>
+                  <h2>{isEdit ? 'Edit administrator' : 'Tenant administrator'}</h2>
+                  <p className="muted text-xs">Organization #{orgId}</p>
+                </div>
+                <button
+                  className="icon-button"
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  aria-label="Close"
+                >
+                  ×
+                </button>
+              </div>
+
+              {errorMsg && (
+                <p className="form-error mb-4">{errorMsg}</p>
+              )}
+
+              <div className="form-grid">
+                <label className="field form-span">
+                  <span>Username</span>
+                  <input
+                    id="tenantAdminUsername"
+                    maxLength={100}
+                    placeholder="foodfast-admin"
+                    value={form.username}
+                    onChange={(e) => setForm({ ...form, username: e.target.value })}
+                    required
+                    autoFocus
+                  />
+                </label>
+
+                <label className="field form-span">
+                  <span>Password</span>
+                  <input
+                    id="tenantAdminPassword"
+                    type="password"
+                    maxLength={100}
+                    placeholder={isEdit ? 'Leave blank to keep existing password' : 'Minimum 8 characters'}
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    required={!isEdit}
+                  />
+                </label>
+
+                <label className="switch-row form-span">
+                  <span>
+                    <strong>Account enabled</strong>
+                    <small>Disabled users cannot log in.</small>
+                  </span>
+                  <input
+                    id="tenantAdminEnabled"
+                    type="checkbox"
+                    checked={form.enabled}
+                    onChange={(e) => setForm({ ...form, enabled: e.target.checked })}
+                  />
+                </label>
+              </div>
+
+              <div className="modal-actions split-actions">
+                {isEdit ? (
+                  <button
+                    className="button button-danger"
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm('Delete this tenant administrator?')) {
+                        deleteMutation.mutate()
+                      }
+                    }}
+                  >
+                    Delete administrator
+                  </button>
+                ) : (
+                  <span />
+                )}
+                <span />
+                <button
+                  className="button button-quiet"
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="button button-primary"
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                >
+                  {createMutation.isPending || updateMutation.isPending
+                    ? 'Saving…'
+                    : 'Save administrator'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
-    </div>
+    </section>
   )
 }

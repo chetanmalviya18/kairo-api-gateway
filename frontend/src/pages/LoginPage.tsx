@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAppDispatch } from '@/app/hooks'
 import { setCredentials } from '@/features/auth/authSlice'
 import { login } from '@/features/auth/authApi'
-import { ArrowRight, Lock, User, AlertCircle, KeyRound } from 'lucide-react'
+import KairoLogo from '@/components/common/KairoLogo'
+import './LoginPage.css'
 
 export default function LoginPage() {
   const dispatch = useAppDispatch()
@@ -12,6 +13,7 @@ export default function LoginPage() {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const { mutate, isPending, error } = useMutation({
     mutationFn: login,
@@ -32,88 +34,125 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    mutate({ username, password })
+    if (!username.trim() || !password) return
+    mutate({ username: username.trim(), password })
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-kairo-cream p-4 relative overflow-hidden">
-      {/* Decorative background aura */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 bg-kairo-navy/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-kairo-green/15 rounded-full blur-3xl pointer-events-none" />
+    <div className="login-shell">
+      {/* ================= LEFT PARTITION: STORY ================= */}
+      <section className="login-story">
+        <a className="brand" href="/" aria-label="Kairo Gateway Home">
+          <KairoLogo size="lg" subtitle="GATEWAY" theme="dark" />
+        </a>
 
-      <div className="w-full max-w-md bg-white border border-kairo-cream-border/80 rounded-2xl p-8 md:p-10 shadow-xl shadow-kairo-navy/5 relative z-10">
-        {/* Brand Header */}
-        <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-kairo-navy text-white flex items-center justify-center font-black text-2xl shadow-md mb-4 border border-kairo-navy/20 relative">
-            <span>K</span>
-            <span className="w-2.5 h-2.5 rounded-full bg-kairo-green absolute -top-1 -right-1 border-2 border-white" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-kairo-navy">Kairo Gateway</h1>
-          <p className="text-muted-foreground text-xs mt-1">
-            Sign in to access your API gateway control plane
+        <div className="story-copy">
+          <p className="eyebrow">EDGE TRAFFIC & INGRESS MESH</p>
+          <h1>
+            Dynamic edge routing.<br />Zero-trust tenancy.
+          </h1>
+          <p className="story-lead">
+            Configure upstream microservice routes, enforce granular header rules, and govern tenant organizations with sub-millisecond precision.
           </p>
-        </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-              Username
-            </label>
-            <div className="relative">
-              <User size={16} className="absolute left-3.5 top-3 text-muted-foreground" />
-              <input
-                className="w-full border border-kairo-cream-border rounded-lg pl-10 pr-3.5 py-2.5 text-sm bg-kairo-cream/40 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green transition-all"
-                value={username}
-                placeholder="admin or tenant-admin"
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                autoFocus
-              />
+          <div className="architecture-strip" aria-label="Kairo architecture flow">
+            <div>
+              <span>01</span>
+              <strong>Ingress</strong>
+              <small>Path & rewrite</small>
+            </div>
+            <i />
+            <div>
+              <span>02</span>
+              <strong>Isolate</strong>
+              <small>Multi-tenant JWT</small>
+            </div>
+            <i />
+            <div>
+              <span>03</span>
+              <strong>Govern</strong>
+              <small>Policies & audits</small>
             </div>
           </div>
+        </div>
 
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-              Password
-            </label>
-            <div className="relative">
-              <Lock size={16} className="absolute left-3.5 top-3 text-muted-foreground" />
+        <p className="story-footer">Kairo · Enterprise API Gateway Control Plane</p>
+      </section>
+
+      {/* ================= RIGHT PARTITION: LOGIN PANEL ================= */}
+      <section className="login-panel">
+        <form onSubmit={handleSubmit} className="login-card">
+          <div className="login-card-header">
+            <p className="eyebrow">GATEWAY CONTROL PLANE</p>
+            <h2>Sign In</h2>
+            <p className="muted">Enter your administrative credentials to manage routes and policies.</p>
+          </div>
+
+          <label className="field">
+            <span>Username</span>
+            <input
+              id="loginUsername"
+              name="username"
+              type="text"
+              autoComplete="username"
+              placeholder="admin or tenant-admin"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              autoFocus
+            />
+          </label>
+
+          <label className="field">
+            <span>Password</span>
+            <span className="password-wrap">
               <input
-                type="password"
-                className="w-full border border-kairo-cream-border rounded-lg pl-10 pr-3.5 py-2.5 text-sm bg-kairo-cream/40 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green transition-all"
+                id="loginPassword"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                placeholder="Enter password"
                 value={password}
-                placeholder="••••••••"
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-            </div>
-          </div>
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </span>
+          </label>
 
           {error && (
-            <div className="flex items-center gap-2 p-3 text-xs bg-destructive/10 border border-destructive/20 text-destructive rounded-lg">
-              <AlertCircle size={15} />
-              <span>Invalid username or password. Please try again.</span>
-            </div>
+            <p className="form-error">
+              Invalid credentials. Please verify your username and password.
+            </p>
           )}
 
           <button
+            id="loginButton"
+            className="button-wide"
             type="submit"
-            disabled={isPending}
-            className="w-full bg-kairo-navy hover:bg-kairo-navy-light text-white rounded-lg px-4 py-3 text-sm font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow transition-all disabled:opacity-50 mt-2"
+            disabled={isPending || !username.trim() || !password}
           >
-            <span>{isPending ? 'Authenticating…' : 'Sign In to Gateway'}</span>
-            {!isPending && <ArrowRight size={16} />}
+            {isPending ? (
+              <span className="button-loading">
+                <span className="button-spinner" aria-hidden="true" />
+                <span>Authenticating…</span>
+              </span>
+            ) : (
+              <>
+                <span>Authenticate & Continue</span>
+                <span aria-hidden="true">→</span>
+              </>
+            )}
           </button>
         </form>
-
-        <div className="mt-8 pt-6 border-t border-kairo-cream-border text-center">
-          <p className="text-[11px] text-muted-foreground flex items-center justify-center gap-1.5">
-            <KeyRound size={12} className="text-kairo-green" />
-            Stateless OAuth2 JWT authentication
-          </p>
-        </div>
-      </div>
+      </section>
     </div>
   )
 }

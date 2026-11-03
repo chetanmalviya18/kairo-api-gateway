@@ -1,17 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getRoute } from '@/features/routes/routeApi'
-import { ArrowLeft, Settings2 } from 'lucide-react'
-
-const DIRECTION_COLOR: Record<string, string> = {
-  REQUEST: 'bg-kairo-navy/10 text-kairo-navy border-kairo-navy/20',
-  RESPONSE: 'bg-indigo-500/10 text-indigo-700 border-indigo-500/20',
-}
-
-const ACTION_COLOR: Record<string, string> = {
-  ADD: 'bg-kairo-green/10 text-kairo-green border-kairo-green/20',
-  REMOVE: 'bg-rose-500/10 text-rose-700 border-rose-500/20',
-}
+import { ArrowLeft } from 'lucide-react'
 
 export default function HeaderRulesPage() {
   const { routeId } = useParams<{ routeId: string }>()
@@ -24,90 +14,111 @@ export default function HeaderRulesPage() {
   })
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <section className="page-section">
       <button
         onClick={() => navigate('/tenant/routes')}
-        className="flex items-center gap-1.5 text-muted-foreground hover:text-kairo-navy text-xs font-semibold transition"
+        className="button button-quiet mb-6 inline-flex items-center gap-2 text-xs"
+        type="button"
       >
-        <ArrowLeft size={16} /> Back to Routes
+        <ArrowLeft size={14} /> Back to Routes
       </button>
 
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-kairo-navy flex items-center gap-2.5">
-          <Settings2 size={24} className="text-kairo-green" />
-          <span>Header Transformation Rules</span>
-        </h1>
-        {route && (
-          <p className="text-muted-foreground text-xs mt-1">
-            Route: <span className="font-bold text-kairo-navy">{route.name}</span> (
-            <span className="font-mono text-xs">{route.routeId}</span>) • Path Pattern:{' '}
-            <span className="font-mono text-xs font-semibold text-kairo-navy">{route.pathPattern}</span>
-          </p>
-        )}
+      {/* Section Heading */}
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">GATEWAY CONFIGURATION</p>
+          <h1>Header transformation rules</h1>
+          {route ? (
+            <p className="muted">
+              Rules configured for <strong className="text-ink">{route.name}</strong> ({route.routeId}) on path{' '}
+              <code className="text-forest-2 font-mono">{route.pathPattern}</code>
+            </p>
+          ) : (
+            <p className="muted">Configure request and response headers for downstream services.</p>
+          )}
+        </div>
       </div>
 
-      {isLoading && (
-        <div className="p-10 text-center text-xs text-muted-foreground animate-pulse">
+      {isLoading ? (
+        <div className="py-12 text-center text-muted text-xs animate-pulse">
           Loading header transformation rules…
         </div>
-      )}
-
-      {route && (
-        <div className="bg-white border border-kairo-cream-border rounded-xl shadow-sm overflow-hidden">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-kairo-cream-border bg-kairo-cream/60 text-kairo-navy font-semibold">
-                <th className="text-left px-5 py-3.5">Direction</th>
-                <th className="text-left px-5 py-3.5">Action</th>
-                <th className="text-left px-5 py-3.5">Header Name</th>
-                <th className="text-left px-5 py-3.5">Header Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {route.headerRules.map((rule, idx) => {
-                const headerName = rule.headerName || rule.header_name || ''
-                const headerValue = rule.headerValue || rule.header_value || ''
-                return (
-                  <tr
-                    key={rule.id ?? idx}
-                    className="border-b border-kairo-cream-border last:border-0 hover:bg-kairo-cream/30 transition-colors"
-                  >
-                    <td className="px-5 py-3.5">
-                      <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
-                          DIRECTION_COLOR[rule.direction] || 'bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        {rule.direction}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
-                          ACTION_COLOR[rule.action] || 'bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        {rule.action}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5 font-mono font-semibold text-kairo-navy">{headerName}</td>
-                    <td className="px-5 py-3.5 font-mono text-muted-foreground">
-                      {headerValue || '—'}
+      ) : !route ? (
+        <div className="table-card p-0">
+          <div className="empty-state">
+            <strong>Route not found</strong>
+            <span>Unable to load rules for route #{routeId}.</span>
+          </div>
+        </div>
+      ) : (
+        <div className="table-card">
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Direction</th>
+                  <th>Action</th>
+                  <th>Header Name</th>
+                  <th>Header Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {route.headerRules.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="p-0">
+                      <div className="empty-state">
+                        <strong>No header rules configured</strong>
+                        <span>This route forwards headers without modifications.</span>
+                      </div>
                     </td>
                   </tr>
-                )
-              })}
-              {route.headerRules.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-5 py-10 text-center text-muted-foreground">
-                    No header transformation rules configured for this route.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  route.headerRules.map((rule, idx) => {
+                    const headerName = rule.headerName || rule.header_name || ''
+                    const headerValue = rule.headerValue || rule.header_value || ''
+                    return (
+                      <tr key={rule.id ?? idx}>
+                        <td>
+                          <span
+                            className={
+                              rule.direction === 'REQUEST'
+                                ? 'status status-active'
+                                : 'status status-pending'
+                            }
+                          >
+                            {rule.direction}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            className={
+                              rule.action === 'ADD'
+                                ? 'status status-active'
+                                : 'status status-suspended'
+                            }
+                          >
+                            {rule.action}
+                          </span>
+                        </td>
+                        <td>
+                          <code className="font-mono text-xs font-semibold text-ink">
+                            {headerName}
+                          </code>
+                        </td>
+                        <td>
+                          <span className="font-mono text-xs text-muted">
+                            {headerValue || '—'}
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
-    </div>
+    </section>
   )
 }

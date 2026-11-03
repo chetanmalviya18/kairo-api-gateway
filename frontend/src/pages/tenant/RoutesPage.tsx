@@ -11,16 +11,12 @@ import { getTenantOrganization } from '@/features/organizations/organizationApi'
 import RouteFormModal from './RouteFormModal'
 import RouteVersionsModal from './RouteVersionsModal'
 import {
-  Plus,
-  Settings2,
   ToggleLeft,
   ToggleRight,
   Pencil,
   Trash2,
   History,
-  Search,
-  Zap,
-  Route as RouteIcon,
+  Sliders,
 } from 'lucide-react'
 
 export default function RoutesPage() {
@@ -32,19 +28,16 @@ export default function RoutesPage() {
   const [editingRoute, setEditingRoute] = useState<ApiRoute | null>(null)
   const [versionModalRoute, setVersionModalRoute] = useState<{ id: string; name: string } | null>(null)
 
-  // Fetch tenant organization for route slug namespace helper
   const { data: organization } = useQuery({
     queryKey: ['tenant-organization'],
     queryFn: getTenantOrganization,
   })
 
-  // Fetch all routes
-  const { data: routes, isLoading } = useQuery({
+  const { data: routes = [], isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['routes'],
     queryFn: getRoutes,
   })
 
-  // Status toggle mutation
   const statusMutation = useMutation({
     mutationFn: ({ id, active }: { id: number; active: boolean }) =>
       changeRouteStatus(id, { active }),
@@ -57,7 +50,6 @@ export default function RoutesPage() {
     },
   })
 
-  // Delete route mutation
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteRoute(id),
     onSuccess: () => {
@@ -85,7 +77,7 @@ export default function RoutesPage() {
     }
   }
 
-  const filteredRoutes = routes?.filter((r) => {
+  const filteredRoutes = routes.filter((r) => {
     const q = searchTerm.toLowerCase()
     return (
       r.routeId.toLowerCase().includes(q) ||
@@ -96,237 +88,195 @@ export default function RoutesPage() {
   })
 
   return (
-    <div className="space-y-6 max-w-6xl">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <section className="page-section">
+      {/* Section Heading */}
+      <div className="section-heading">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-kairo-navy flex items-center gap-2.5">
-            <RouteIcon className="text-kairo-green" size={26} />
-            <span>API Gateway Routes</span>
-          </h1>
-          <p className="text-muted-foreground text-xs mt-1">
-            Configure URL matching rules, target upstreams, rate limit ceilings, and header rewrites
-          </p>
+          <p className="eyebrow">GATEWAY CONFIGURATION</p>
+          <h1>Routes</h1>
+          <p className="muted">Routing, traffic controls and transformations for your organization.</p>
         </div>
         <button
+          className="button button-primary"
+          type="button"
           onClick={handleOpenCreate}
-          className="flex items-center gap-2 bg-kairo-navy hover:bg-kairo-navy-light text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow-sm transition self-start sm:self-auto"
         >
-          <Plus size={16} /> New Route
+          + New route
         </button>
       </div>
 
-      {/* Search / Filter Bar */}
-      <div className="relative max-w-md">
-        <Search size={16} className="absolute left-3.5 top-3 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Search by route ID, name, or path pattern…"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full border border-kairo-cream-border rounded-lg pl-10 pr-4 py-2.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green shadow-xs transition"
-        />
-      </div>
+      {/* Table Card */}
+      <div className="table-card">
+        <div className="table-toolbar">
+          <label className="search-field">
+            <span aria-hidden="true">⌕</span>
+            <input
+              placeholder="Search route ID, name or path"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </label>
+          <button
+            className="button button-quiet"
+            type="button"
+            onClick={() => refetch()}
+            disabled={isRefetching}
+          >
+            {isRefetching ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
 
-      {/* Routes Table */}
-      <div className="bg-white border border-kairo-cream-border rounded-xl shadow-sm overflow-hidden">
-        {isLoading ? (
-          <div className="p-10 text-center text-xs text-muted-foreground animate-pulse">
-            Loading gateway routes…
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-kairo-cream-border bg-kairo-cream/60 text-kairo-navy font-semibold">
-                  <th className="text-left px-5 py-3.5">Route</th>
-                  <th className="text-left px-5 py-3.5">Ingress Pattern</th>
-                  <th className="text-left px-5 py-3.5">Target Upstream</th>
-                  <th className="text-left px-5 py-3.5">Methods</th>
-                  <th className="text-left px-5 py-3.5">Limits</th>
-                  <th className="text-left px-5 py-3.5">Status</th>
-                  <th className="text-right px-5 py-3.5">Actions</th>
+        <div className="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Route</th>
+                <th>Public path</th>
+                <th>Policies</th>
+                <th>Status</th>
+                <th>Version</th>
+                <th className="align-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-10 text-muted">
+                    Loading gateway routes…
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredRoutes?.map((route: ApiRoute) => (
-                  <tr
-                    key={route.id}
-                    className="border-b border-kairo-cream-border last:border-0 hover:bg-kairo-cream/30 transition-colors"
-                  >
-                    {/* Route ID & Name */}
-                    <td className="px-5 py-3.5">
-                      <div>
-                        <div className="flex items-center gap-1.5 font-bold text-kairo-navy">
-                          <span className="text-sm">{route.name}</span>
-                          <span className="font-mono text-[10px] text-muted-foreground px-1.5 py-0.2 bg-kairo-cream border border-kairo-cream-border rounded">
-                            v{route.configurationVersion}
-                          </span>
-                        </div>
-                        <span className="font-mono text-[11px] text-muted-foreground block mt-0.5">
-                          {route.routeId}
-                        </span>
+              ) : filteredRoutes.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-0">
+                    <div className="empty-state">
+                      <strong>No routes configured</strong>
+                      <span>Create the first route for this tenant.</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredRoutes.map((route) => (
+                  <tr key={route.id}>
+                    <td>
+                      <div className="flex flex-col">
+                        <strong className="font-semibold text-ink text-sm">{route.name}</strong>
+                        <span className="font-mono text-[11px] text-muted">{route.routeId}</span>
                       </div>
                     </td>
 
-                    {/* Path Pattern */}
-                    <td className="px-5 py-3.5 font-mono font-semibold text-kairo-navy">
-                      <span className="px-2 py-0.5 rounded bg-kairo-cream border border-kairo-cream-border">
+                    <td>
+                      <code className="path-code font-mono text-xs text-forest-2">
                         {route.pathPattern}
-                      </span>
+                      </code>
                     </td>
 
-                    {/* Target Base URL + Prefix */}
-                    <td className="px-5 py-3.5 font-mono text-[11px] text-muted-foreground max-w-[200px] truncate">
-                      <span title={`${route.targetBaseUrl}${route.targetPathPrefix}`}>
-                        {route.targetBaseUrl}
-                        {route.targetPathPrefix !== '/' ? route.targetPathPrefix : ''}
-                      </span>
-                    </td>
-
-                    {/* Allowed Methods */}
-                    <td className="px-5 py-3.5">
-                      <div className="flex flex-wrap gap-1 max-w-[140px]">
-                        {route.allowedMethods.map((m) => (
-                          <span
-                            key={m}
-                            className="px-1.5 py-0.5 bg-kairo-cream text-kairo-navy border border-kairo-cream-border rounded text-[10px] font-mono font-bold"
-                          >
-                            {m}
+                    <td>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="font-mono text-[10px] bg-paper px-1.5 py-0.5 rounded border border-line text-ink">
+                          {route.allowedMethods.join(', ')}
+                        </span>
+                        {route.requestsPerMinute && (
+                          <span className="font-mono text-[10px] bg-paper px-1.5 py-0.5 rounded border border-line text-muted">
+                            {route.requestsPerMinute} req/m
                           </span>
-                        ))}
-                      </div>
-                    </td>
-
-                    {/* Limits & Idempotency */}
-                    <td className="px-5 py-3.5 whitespace-nowrap text-muted-foreground">
-                      <div className="font-medium text-foreground">{route.requestsPerMinute} req/min</div>
-                      <div className="text-[11px] flex items-center gap-1 text-muted-foreground">
-                        <span>{route.responseTimeoutMs}ms</span>
+                        )}
                         {route.idempotencyEnabled && (
-                          <span
-                            title="Idempotency Enabled"
-                            className="text-amber-600 font-bold"
-                          >
-                            <Zap size={11} className="inline fill-current" />
+                          <span className="font-mono text-[10px] bg-paper px-1.5 py-0.5 rounded border border-line text-forest-2 font-medium">
+                            idempotent
                           </span>
                         )}
                       </div>
                     </td>
 
-                    {/* Status */}
-                    <td className="px-5 py-3.5 whitespace-nowrap">
-                      <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
-                          route.active
-                            ? 'bg-kairo-green/10 text-kairo-green border-kairo-green/20'
-                            : 'bg-gray-500/10 text-gray-500 border-gray-500/20'
-                        }`}
-                      >
-                        {route.active ? 'Active' : 'Inactive'}
+                    <td>
+                      <span className={route.active ? 'status status-active' : 'status status-inactive'}>
+                        {route.active ? 'ACTIVE' : 'INACTIVE'}
                       </span>
                     </td>
 
-                    {/* Action buttons */}
-                    <td className="px-5 py-3.5 whitespace-nowrap text-right">
-                      <div className="flex items-center gap-1.5 justify-end">
-                        {/* Versions */}
-                        <button
-                          onClick={() =>
-                            setVersionModalRoute({ id: route.routeId, name: route.name })
-                          }
-                          title="View configuration versions"
-                          className="text-muted-foreground hover:text-kairo-navy p-1.5 rounded-lg hover:bg-kairo-cream transition"
-                        >
-                          <History size={15} />
-                        </button>
+                    <td>
+                      <span className="font-mono text-xs text-muted">
+                        v{route.configurationVersion}
+                      </span>
+                    </td>
 
-                        {/* Header Rules */}
+                    <td className="align-right">
+                      <div className="inline-flex items-center gap-1.5">
                         <button
-                          onClick={() =>
-                            navigate(`/tenant/routes/${route.id}/header-rules`)
-                          }
-                          title={`Header Rules (${route.headerRules?.length || 0})`}
-                          className="text-muted-foreground hover:text-kairo-navy p-1.5 rounded-lg hover:bg-kairo-cream transition relative"
-                        >
-                          <Settings2 size={15} />
-                          {route.headerRules && route.headerRules.length > 0 && (
-                            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-kairo-green text-white text-[9px] rounded-full flex items-center justify-center font-bold">
-                              {route.headerRules.length}
-                            </span>
-                          )}
-                        </button>
-
-                        {/* Edit */}
-                        <button
+                          type="button"
                           onClick={() => handleOpenEdit(route)}
+                          className="button button-quiet p-1.5 h-auto min-h-0 text-xs"
                           title="Edit Route"
-                          className="text-muted-foreground hover:text-kairo-navy p-1.5 rounded-lg hover:bg-kairo-cream transition"
                         >
-                          <Pencil size={15} />
+                          <Pencil size={13} />
                         </button>
-
-                        {/* Status Toggle */}
                         <button
-                          onClick={() =>
-                            statusMutation.mutate({ id: route.id, active: !route.active })
-                          }
-                          title={route.active ? 'Deactivate Route' : 'Activate Route'}
-                          className="text-muted-foreground hover:text-kairo-navy p-1.5 rounded-lg hover:bg-kairo-cream transition"
+                          type="button"
+                          onClick={() => navigate(`/tenant/routes/${route.id}/headers`)}
+                          className="button button-quiet p-1.5 h-auto min-h-0 text-xs"
+                          title="Header Rules"
+                        >
+                          <Sliders size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setVersionModalRoute({ id: route.routeId, name: route.name })}
+                          className="button button-quiet p-1.5 h-auto min-h-0 text-xs"
+                          title="Route Version History"
+                        >
+                          <History size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => statusMutation.mutate({ id: route.id, active: !route.active })}
+                          disabled={statusMutation.isPending}
+                          className="button button-quiet p-1.5 h-auto min-h-0 text-xs"
+                          title={`Toggle ${route.active ? 'Inactive' : 'Active'}`}
                         >
                           {route.active ? (
-                            <ToggleRight size={18} className="text-kairo-green" />
+                            <ToggleRight size={15} className="text-forest-2" />
                           ) : (
-                            <ToggleLeft size={18} />
+                            <ToggleLeft size={15} className="text-muted" />
                           )}
                         </button>
-
-                        {/* Delete */}
                         <button
+                          type="button"
                           onClick={() => handleDelete(route)}
+                          disabled={deleteMutation.isPending}
+                          className="button button-danger p-1.5 h-auto min-h-0 text-xs"
                           title="Delete Route"
-                          className="text-muted-foreground hover:text-destructive p-1.5 rounded-lg hover:bg-destructive/10 transition"
                         >
-                          <Trash2 size={15} />
+                          <Trash2 size={13} />
                         </button>
                       </div>
                     </td>
                   </tr>
-                ))}
-
-                {filteredRoutes?.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="px-5 py-10 text-center text-muted-foreground">
-                      No matching routes found. Click "New Route" to create your first route.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Route Create / Edit Modal */}
-      <RouteFormModal
-        isOpen={isFormOpen}
-        onClose={() => {
-          setIsFormOpen(false)
-          setEditingRoute(null)
-        }}
-        route={editingRoute}
-        tenantSlug={organization?.slug}
-      />
+      {/* Route Form Modal */}
+      {isFormOpen && (
+        <RouteFormModal
+          isOpen={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          initialData={editingRoute}
+          organizationSlug={organization?.slug}
+        />
+      )}
 
-      {/* Configuration Versions Modal */}
+      {/* Route Versions Timeline Modal */}
       {versionModalRoute && (
         <RouteVersionsModal
-          isOpen={!!versionModalRoute}
+          isOpen={Boolean(versionModalRoute)}
           onClose={() => setVersionModalRoute(null)}
           routeId={versionModalRoute.id}
           routeName={versionModalRoute.name}
         />
       )}
-    </div>
+    </section>
   )
 }

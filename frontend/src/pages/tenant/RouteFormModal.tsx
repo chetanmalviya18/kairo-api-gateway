@@ -13,14 +13,25 @@ interface Props {
   isOpen: boolean
   onClose: () => void
   route?: ApiRoute | null
+  initialData?: ApiRoute | null
   tenantSlug?: string
+  organizationSlug?: string
 }
 
 const AVAILABLE_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD']
 
-export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: Props) {
+export default function RouteFormModal({
+  isOpen,
+  onClose,
+  route,
+  initialData,
+  tenantSlug,
+  organizationSlug,
+}: Props) {
   const queryClient = useQueryClient()
-  const isEdit = !!route
+  const activeRoute = route || initialData
+  const activeSlug = tenantSlug || organizationSlug
+  const isEdit = !!activeRoute
 
   const [routeId, setRouteId] = useState('')
   const [name, setName] = useState('')
@@ -36,19 +47,19 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    if (route) {
-      setRouteId(route.routeId)
-      setName(route.name)
-      setPathPattern(route.pathPattern)
-      setTargetBaseUrl(route.targetBaseUrl)
-      setTargetPathPrefix(route.targetPathPrefix)
-      setRequestsPerMinute(route.requestsPerMinute)
-      setResponseTimeoutMs(route.responseTimeoutMs)
-      setIdempotencyEnabled(route.idempotencyEnabled)
-      setActive(route.active)
-      setAllowedMethods(route.allowedMethods || ['GET'])
+    if (activeRoute) {
+      setRouteId(activeRoute.routeId)
+      setName(activeRoute.name)
+      setPathPattern(activeRoute.pathPattern)
+      setTargetBaseUrl(activeRoute.targetBaseUrl)
+      setTargetPathPrefix(activeRoute.targetPathPrefix)
+      setRequestsPerMinute(activeRoute.requestsPerMinute)
+      setResponseTimeoutMs(activeRoute.responseTimeoutMs)
+      setIdempotencyEnabled(activeRoute.idempotencyEnabled)
+      setActive(activeRoute.active)
+      setAllowedMethods(activeRoute.allowedMethods || ['GET'])
       setHeaderRules(
-        route.headerRules?.map((r) => ({
+        activeRoute.headerRules?.map((r) => ({
           direction: r.direction,
           action: r.action,
           headerName: r.headerName || r.header_name || '',
@@ -56,7 +67,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
         })) || []
       )
     } else {
-      const defaultPrefix = tenantSlug ? `/${tenantSlug}/` : '/'
+      const defaultPrefix = activeSlug ? `/${activeSlug}/` : '/'
       setRouteId('')
       setName('')
       setPathPattern(defaultPrefix)
@@ -70,7 +81,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
       setHeaderRules([])
     }
     setErrorMessage(null)
-  }, [route, tenantSlug, isOpen])
+  }, [activeRoute, activeSlug, isOpen])
 
   const createMutation = useMutation({
     mutationFn: createRoute,
@@ -85,10 +96,10 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
   })
 
   const updateMutation = useMutation({
-    mutationFn: (data: RouteRequest) => updateRoute(route!.id, data),
+    mutationFn: (data: RouteRequest) => updateRoute(activeRoute!.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['routes'] })
-      queryClient.invalidateQueries({ queryKey: ['route', route!.id] })
+      queryClient.invalidateQueries({ queryKey: ['route', activeRoute!.id] })
       queryClient.invalidateQueries({ queryKey: ['tenant-audit-records'] })
       onClose()
     },
@@ -185,12 +196,12 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
   const isPending = createMutation.isPending || updateMutation.isPending
 
   return (
-    <div className="fixed inset-0 z-50 bg-kairo-navy/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-[#17221d]/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white border border-kairo-cream-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col my-8 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-kairo-cream-border bg-kairo-cream/60">
           <div>
-            <h2 className="text-base font-bold text-kairo-navy">
+            <h2 className="text-base font-bold text-ink">
               {isEdit ? 'Edit API Route' : 'Create New API Route'}
             </h2>
             <p className="text-[11px] text-muted-foreground">
@@ -199,7 +210,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
           </div>
           <button
             onClick={onClose}
-            className="text-muted-foreground hover:text-kairo-navy p-1.5 rounded-lg hover:bg-white transition"
+            className="text-muted-foreground hover:text-kairo-green p-1.5 rounded-lg hover:bg-white transition"
           >
             <X size={18} />
           </button>
@@ -310,8 +321,8 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
                     onClick={() => toggleMethod(method)}
                     className={`px-3 py-1 rounded-lg text-xs font-mono font-bold border transition ${
                       selected
-                        ? 'bg-kairo-navy text-white border-kairo-navy shadow-xs'
-                        : 'border-kairo-cream-border bg-kairo-cream text-kairo-navy hover:bg-kairo-cream-border'
+                        ? 'bg-kairo-green text-white border-kairo-green shadow-xs'
+                        : 'border-kairo-cream-border bg-kairo-cream text-ink hover:bg-kairo-cream-border'
                     }`}
                   >
                     {method}
@@ -379,7 +390,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
           <div className="pt-3 border-t border-kairo-cream-border">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-kairo-navy">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-ink">
                   Header Transformation Rules
                 </h3>
                 <p className="text-[11px] text-muted-foreground">
@@ -389,7 +400,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
               <button
                 type="button"
                 onClick={addHeaderRule}
-                className="flex items-center gap-1 text-xs font-semibold bg-kairo-cream hover:bg-kairo-cream-dark text-kairo-navy px-3 py-1.5 rounded-lg border border-kairo-cream-border transition"
+                className="flex items-center gap-1 text-xs font-semibold bg-kairo-cream hover:bg-kairo-cream-dark text-ink px-3 py-1.5 rounded-lg border border-kairo-cream-border transition"
               >
                 <Plus size={14} className="text-kairo-green" /> Add Rule
               </button>
@@ -409,7 +420,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
                     <select
                       value={rule.direction}
                       onChange={(e) => updateHeaderRule(idx, 'direction', e.target.value)}
-                      className="text-xs font-semibold border border-kairo-cream-border rounded-lg px-2.5 py-1.5 bg-white text-kairo-navy focus:outline-none"
+                      className="text-xs font-semibold border border-kairo-cream-border rounded-lg px-2.5 py-1.5 bg-white text-ink focus:outline-none"
                     >
                       <option value="REQUEST">REQUEST</option>
                       <option value="RESPONSE">RESPONSE</option>
@@ -418,7 +429,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
                     <select
                       value={rule.action}
                       onChange={(e) => updateHeaderRule(idx, 'action', e.target.value)}
-                      className="text-xs font-semibold border border-kairo-cream-border rounded-lg px-2.5 py-1.5 bg-white text-kairo-navy focus:outline-none"
+                      className="text-xs font-semibold border border-kairo-cream-border rounded-lg px-2.5 py-1.5 bg-white text-ink focus:outline-none"
                     >
                       <option value="ADD">ADD</option>
                       <option value="REMOVE">REMOVE</option>
@@ -470,7 +481,7 @@ export default function RouteFormModal({ isOpen, onClose, route, tenantSlug }: P
             <button
               type="submit"
               disabled={isPending}
-              className="bg-kairo-navy hover:bg-kairo-navy-light text-white px-5 py-2 text-xs font-semibold rounded-lg shadow-sm hover:shadow transition disabled:opacity-50"
+              className="bg-kairo-green hover:bg-kairo-green-dark text-white px-5 py-2 text-xs font-semibold rounded-lg shadow-sm hover:shadow transition disabled:opacity-50"
             >
               {isPending ? 'Saving Route…' : isEdit ? 'Save Route Changes' : 'Create Route'}
             </button>
