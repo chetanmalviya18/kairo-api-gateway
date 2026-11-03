@@ -12,6 +12,7 @@ import TenantLayout from '@/pages/tenant/TenantLayout'
 import TenantOrganizationPage from '@/pages/tenant/TenantOrganizationPage'
 import RoutesPage from '@/pages/tenant/RoutesPage'
 import HeaderRulesPage from '@/pages/tenant/HeaderRulesPage'
+import TenantAuditRecordsPage from '@/pages/tenant/TenantAuditRecordsPage'
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -42,10 +43,11 @@ const router = createBrowserRouter([
         path: '/tenant',
         element: <TenantLayout />,
         children: [
-          { index: true, element: <Navigate to="organization" replace /> },
-          { path: 'organization', element: <TenantOrganizationPage /> },
+          { index: true, element: <Navigate to="routes" replace /> },
           { path: 'routes', element: <RoutesPage /> },
           { path: 'routes/:routeId/header-rules', element: <HeaderRulesPage /> },
+          { path: 'organization', element: <TenantOrganizationPage /> },
+          { path: 'audit-records', element: <TenantAuditRecordsPage /> },
         ],
       },
     ],
