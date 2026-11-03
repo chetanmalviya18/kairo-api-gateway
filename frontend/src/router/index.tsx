@@ -2,7 +2,6 @@ import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import ProtectedRoute from './ProtectedRoute'
 
 import LoginPage from '@/pages/LoginPage'
-import HealthPage from '@/pages/HealthPage'
 
 import PlatformLayout from '@/pages/platform/PlatformLayout'
 import OrganizationsPage from '@/pages/platform/OrganizationsPage'
@@ -14,7 +13,6 @@ import HeaderRulesPage from '@/pages/tenant/HeaderRulesPage'
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
-  { path: '/health', element: <HealthPage /> },
   { path: '/unauthorized', element: <div className="p-8 text-red-500">403 — Unauthorized</div> },
 
   // Platform Admin routes
@@ -57,4 +55,3 @@ const router = createBrowserRouter([
 export default function AppRouter() {
   return <RouterProvider router={router} />
 }
-

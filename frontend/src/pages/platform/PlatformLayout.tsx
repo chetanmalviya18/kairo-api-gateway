@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { logout } from '@/features/auth/authSlice'
-import { Building2, Activity, LogOut } from 'lucide-react'
+import { Building2, LogOut } from 'lucide-react'
 
 export default function PlatformLayout() {
   const dispatch = useAppDispatch()
@@ -33,9 +33,6 @@ export default function PlatformLayout() {
           <NavLink to="/platform/organizations" className={navClass}>
             <Building2 size={16} /> Organizations
           </NavLink>
-          <NavLink to="/health" className={navClass}>
-            <Activity size={16} /> Health
-          </NavLink>
         </nav>
 
         <div className="p-4 border-t border-border">
@@ -64,4 +61,3 @@ export default function PlatformLayout() {
     </div>
   )
 }
-

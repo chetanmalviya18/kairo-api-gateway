@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { logout } from '@/features/auth/authSlice'
-import { Route, Activity, LogOut } from 'lucide-react'
+import { Route, LogOut } from 'lucide-react'
 
 export default function TenantLayout() {
   const dispatch = useAppDispatch()
@@ -32,9 +32,6 @@ export default function TenantLayout() {
           <NavLink to="/tenant/routes" className={navClass}>
             <Route size={16} /> Routes
           </NavLink>
-          <NavLink to="/health" className={navClass}>
-            <Activity size={16} /> Health
-          </NavLink>
         </nav>
 
         <div className="p-4 border-t border-border">
@@ -62,4 +59,3 @@ export default function TenantLayout() {
     </div>
   )
 }
-
