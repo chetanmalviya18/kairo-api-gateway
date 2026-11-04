@@ -7,6 +7,7 @@ import in.kairo.apigateway.management.dto.responseDto.AuditRecordResponse;
 import in.kairo.apigateway.management.dto.responseDto.RouteResponse;
 import in.kairo.apigateway.management.dto.responseDto.RouteVersionResponse;
 import in.kairo.apigateway.management.entity.*;
+import in.kairo.apigateway.management.event.GatewayConfigurationEventService;
 import in.kairo.apigateway.management.exception.ApiException;
 import in.kairo.apigateway.management.repository.ApiRouteRepository;
 import in.kairo.apigateway.management.repository.ControlPlaneAuditRecordRepository;
@@ -30,9 +31,10 @@ public class RouteService {
     private final ObjectMapper objectMapper;
     private final AuditService auditService;
     private final ControlPlaneAuditRecordRepository auditRecordRepository;
+    private final GatewayConfigurationEventService configurationEventService;
 
     public RouteService(TenantContext tenantContext, ApiRouteRepository apiRouteRepository,
-                        RouteConfigurationVersionRepository versionRepository, ObjectMapper objectMapper, AuditService auditService, ControlPlaneAuditRecordRepository auditRecordRepository
+                        RouteConfigurationVersionRepository versionRepository, ObjectMapper objectMapper, AuditService auditService, ControlPlaneAuditRecordRepository auditRecordRepository, GatewayConfigurationEventService configurationEventService
     ) {
         this.tenantContext = tenantContext;
         this.apiRouteRepository = apiRouteRepository;
@@ -40,6 +42,7 @@ public class RouteService {
         this.objectMapper = objectMapper;
         this.auditService = auditService;
         this.auditRecordRepository = auditRecordRepository;
+        this.configurationEventService = configurationEventService;
     }
 
     @Transactional
@@ -64,6 +67,9 @@ public class RouteService {
         auditService.record(organization, "CREATE_ROUTE", "API_ROUTE",
                 apiRoute.getRouteId(), startedAt,
                 "Route configuration version 1 created");
+
+        configurationEventService.publish("CREATED", organization.getId(), apiRoute.getRouteId(),
+                apiRoute.getConfigurationVersion());
 
         return RouteResponse.from(apiRoute);
     }
@@ -104,6 +110,9 @@ public class RouteService {
                 "Route configuration version " +
                         apiRoute.getConfigurationVersion() + " created");
 
+        configurationEventService.publish("UPDATED", organization.getId(), apiRoute.getRouteId(),
+                apiRoute.getConfigurationVersion());
+
         return RouteResponse.from(apiRoute);
     }
 
@@ -126,6 +135,9 @@ public class RouteService {
         auditService.record(organization, action, "API_ROUTE", apiRoute.getRouteId(), startedAt,
                 "Route configuration version " + apiRoute.getConfigurationVersion() + " created");
 
+        configurationEventService.publish(changeType, organization.getId(), apiRoute.getRouteId(),
+                apiRoute.getConfigurationVersion());
+
         return RouteResponse.from(apiRoute);
     }
 
@@ -144,6 +156,9 @@ public class RouteService {
                 "Final configuration saved as version " + apiRoute.getConfigurationVersion());
 
         apiRouteRepository.delete(apiRoute);
+
+        configurationEventService.publish("DELETED", organization.getId(), apiRoute.getRouteId(),
+                apiRoute.getConfigurationVersion());
     }
 
     private ApiRoute getTenantRoute(Long id, Long organizationId) {

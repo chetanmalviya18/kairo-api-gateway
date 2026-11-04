@@ -1,0 +1,34 @@
+package in.kairo.apigateway.management.event;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
+import tools.jackson.databind.ObjectMapper;
+
+public class GatewayConfigurationKafkaPublisher {
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final String topic;
+    private final ObjectMapper objectMapper;
+
+    public GatewayConfigurationKafkaPublisher(KafkaTemplate<String, String> kafkaTemplate,
+                                              ObjectMapper objectMapper,
+                                              @Value("${gateway.kafka.configuration-topic}")  String topic) {
+        this.kafkaTemplate = kafkaTemplate;
+        this.topic = topic;
+        this.objectMapper = objectMapper;
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void publish(GatewayConfigurationChangeEvent event) {
+        String key = event.getOrganizationId() + ":" +
+                (event.getRouteId() == null ? "organization" : event.getRouteId());
+
+        try {
+            kafkaTemplate.send(topic, key, objectMapper.writeValueAsString(event))
+                    .whenComplete((result, exception) -> {});
+        } catch (Exception e) {
+            System.out.println("Could not create Gateway configuration event " + event.getEventId());
+        }
+    }
+}
