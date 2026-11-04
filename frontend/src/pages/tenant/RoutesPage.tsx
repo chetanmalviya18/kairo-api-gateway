@@ -10,6 +10,8 @@ import {
 import { getTenantOrganization } from '@/features/organizations/organizationApi'
 import RouteFormModal from './RouteFormModal'
 import RouteVersionsModal from './RouteVersionsModal'
+import { parseApiError, type ParsedApiError } from '@/lib/errorHandler'
+import FormErrorBanner from '@/components/common/FormErrorBanner'
 import {
   ToggleLeft,
   ToggleRight,
@@ -27,6 +29,7 @@ export default function RoutesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingRoute, setEditingRoute] = useState<ApiRoute | null>(null)
   const [versionModalRoute, setVersionModalRoute] = useState<{ id: string; name: string } | null>(null)
+  const [actionError, setActionError] = useState<ParsedApiError | null>(null)
 
   const { data: organization } = useQuery({
     queryKey: ['tenant-organization'],
@@ -42,36 +45,41 @@ export default function RoutesPage() {
     mutationFn: ({ id, active }: { id: number; active: boolean }) =>
       changeRouteStatus(id, { active }),
     onSuccess: () => {
+      setActionError(null)
       queryClient.invalidateQueries({ queryKey: ['routes'] })
       queryClient.invalidateQueries({ queryKey: ['tenant-audit-records'] })
     },
     onError: (err: any) => {
-      alert(err.response?.data?.message || err.message || 'Failed to toggle route status')
+      setActionError(parseApiError(err, 'Failed to toggle route status'))
     },
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteRoute(id),
     onSuccess: () => {
+      setActionError(null)
       queryClient.invalidateQueries({ queryKey: ['routes'] })
       queryClient.invalidateQueries({ queryKey: ['tenant-audit-records'] })
     },
     onError: (err: any) => {
-      alert(err.response?.data?.message || err.message || 'Failed to delete route')
+      setActionError(parseApiError(err, 'Failed to delete route'))
     },
   })
 
   const handleOpenCreate = () => {
+    setActionError(null)
     setEditingRoute(null)
     setIsFormOpen(true)
   }
 
   const handleOpenEdit = (route: ApiRoute) => {
+    setActionError(null)
     setEditingRoute(route)
     setIsFormOpen(true)
   }
 
   const handleDelete = (route: ApiRoute) => {
+    setActionError(null)
     if (window.confirm(`Are you sure you want to delete route "${route.routeId}" (${route.name})?`)) {
       deleteMutation.mutate(route.id)
     }
@@ -104,6 +112,8 @@ export default function RoutesPage() {
           + New route
         </button>
       </div>
+
+      <FormErrorBanner error={actionError} className="mb-4" />
 
       {/* Table Card */}
       <div className="table-card">

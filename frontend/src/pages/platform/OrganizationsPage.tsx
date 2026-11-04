@@ -11,6 +11,8 @@ import {
   type OrganizationRequest,
 } from '@/features/organizations/organizationApi'
 import { Users, Trash2, ToggleLeft, ToggleRight, Pencil, RefreshCw, X } from 'lucide-react'
+import { parseApiError, type ParsedApiError } from '@/lib/errorHandler'
+import FormErrorBanner from '@/components/common/FormErrorBanner'
 
 export default function OrganizationsPage() {
   const queryClient = useQueryClient()
@@ -19,7 +21,7 @@ export default function OrganizationsPage() {
   const [showForm, setShowForm] = useState(false)
   const [search, setSearch] = useState('')
   const [form, setForm] = useState<OrganizationRequest>({ name: '', slug: '' })
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [apiError, setApiError] = useState<ParsedApiError | null>(null)
 
   const { data: orgs = [], isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['organizations'],
@@ -32,10 +34,10 @@ export default function OrganizationsPage() {
       queryClient.invalidateQueries({ queryKey: ['organizations'] })
       setShowForm(false)
       setForm({ name: '', slug: '' })
-      setErrorMsg(null)
+      setApiError(null)
     },
     onError: (err: any) => {
-      setErrorMsg(err.response?.data?.message || err.message || 'Failed to create organization')
+      setApiError(parseApiError(err, 'Failed to create organization'))
     },
   })
 
@@ -57,10 +59,15 @@ export default function OrganizationsPage() {
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setErrorMsg(null)
+    setApiError(null)
     const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
     if (!slugRegex.test(form.slug)) {
-      setErrorMsg('Slug must contain only lowercase letters, numbers, and single hyphens.')
+      setApiError({
+        status: 400,
+        message: 'Validation Failed',
+        fieldErrors: { slug: 'Must contain only lowercase letters, numbers, and single hyphens.' },
+        formattedMessage: 'Validation Failed (slug: Must contain only lowercase letters, numbers, and single hyphens.)',
+      })
       return
     }
     createMutation.mutate(form)
@@ -102,7 +109,7 @@ export default function OrganizationsPage() {
           type="button"
           onClick={() => {
             setShowForm(true)
-            setErrorMsg(null)
+            setApiError(null)
           }}
         >
           + New organization
@@ -258,25 +265,33 @@ export default function OrganizationsPage() {
                   </button>
                 </div>
 
-                {errorMsg && (
-                  <p className="form-error">{errorMsg}</p>
-                )}
+                <FormErrorBanner error={apiError} />
 
                 <div className="form-grid">
-                  <label className="field form-span">
+                  <label className={`field form-span ${apiError?.fieldErrors?.name ? 'field-has-error' : ''}`}>
                     <span>Name</span>
                     <input
                       id="organizationName"
                       maxLength={150}
                       placeholder="FoodFast"
                       value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      onChange={(e) => {
+                        setForm({ ...form, name: e.target.value })
+                        if (apiError?.fieldErrors?.name) {
+                          const updated = { ...apiError.fieldErrors }
+                          delete updated.name
+                          setApiError({ ...apiError, fieldErrors: updated })
+                        }
+                      }}
                       required
                       autoFocus
                     />
+                    {apiError?.fieldErrors?.name && (
+                      <span className="field-error-msg">{apiError.fieldErrors.name}</span>
+                    )}
                   </label>
 
-                  <label className="field form-span">
+                  <label className={`field form-span ${apiError?.fieldErrors?.slug ? 'field-has-error' : ''}`}>
                     <span>Slug</span>
                     <input
                       id="organizationSlug"
@@ -284,10 +299,21 @@ export default function OrganizationsPage() {
                       pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
                       placeholder="foodfast"
                       value={form.slug}
-                      onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase() })}
+                      onChange={(e) => {
+                        setForm({ ...form, slug: e.target.value.toLowerCase() })
+                        if (apiError?.fieldErrors?.slug) {
+                          const updated = { ...apiError.fieldErrors }
+                          delete updated.slug
+                          setApiError({ ...apiError, fieldErrors: updated })
+                        }
+                      }}
                       required
                     />
-                    <small>Lowercase letters, numbers and hyphens.</small>
+                    {apiError?.fieldErrors?.slug ? (
+                      <span className="field-error-msg">{apiError.fieldErrors.slug}</span>
+                    ) : (
+                      <small>Lowercase letters, numbers and hyphens.</small>
+                    )}
                   </label>
                 </div>
 

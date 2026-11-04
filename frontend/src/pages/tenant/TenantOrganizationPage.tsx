@@ -5,14 +5,16 @@ import {
   updateTenantOrganization,
   type TenantOrganizationRequest,
 } from '@/features/organizations/organizationApi'
-import { CheckCircle2, AlertCircle } from 'lucide-react'
+import { CheckCircle2 } from 'lucide-react'
+import { parseApiError, type ParsedApiError } from '@/lib/errorHandler'
+import FormErrorBanner from '@/components/common/FormErrorBanner'
 
 export default function TenantOrganizationPage() {
   const queryClient = useQueryClient()
 
   const [form, setForm] = useState<TenantOrganizationRequest>({ name: '' })
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [apiError, setApiError] = useState<ParsedApiError | null>(null)
 
   const {
     data: organization,
@@ -36,23 +38,26 @@ export default function TenantOrganizationPage() {
       queryClient.setQueryData(['tenant-organization'], updated)
       queryClient.invalidateQueries({ queryKey: ['tenant-audit-records'] })
       setSuccessMessage('Organization display name updated successfully.')
-      setErrorMessage(null)
+      setApiError(null)
     },
     onError: (err: any) => {
-      setErrorMessage(
-        err.response?.data?.message || err.message || 'Failed to update organization name'
-      )
+      setApiError(parseApiError(err, 'Failed to update organization name'))
       setSuccessMessage(null)
     },
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setErrorMessage(null)
+    setApiError(null)
     setSuccessMessage(null)
 
     if (!form.name.trim()) {
-      setErrorMessage('Organization name cannot be blank.')
+      setApiError({
+        status: 400,
+        message: 'Validation Failed',
+        fieldErrors: { name: 'Organization name cannot be blank.' },
+        formattedMessage: 'Organization name cannot be blank.',
+      })
       return
     }
 
@@ -74,7 +79,7 @@ export default function TenantOrganizationPage() {
       <div className="p-6 bg-white border border-red-200 text-red-700 rounded-xl max-w-xl">
         <p className="font-semibold text-sm">Unable to load organization</p>
         <p className="text-xs mt-1">
-          {(error as any)?.response?.data?.message || 'Could not fetch your organization profile.'}
+          {parseApiError(error, 'Could not fetch your organization profile.').formattedMessage}
         </p>
       </div>
     )
@@ -99,12 +104,7 @@ export default function TenantOrganizationPage() {
         </div>
       )}
 
-      {errorMessage && (
-        <div className="flex items-center gap-2 p-3.5 mb-6 text-xs font-medium bg-red-50 border border-red-200 text-red-700 rounded-xl">
-          <AlertCircle size={16} />
-          <span>{errorMessage}</span>
-        </div>
-      )}
+      <FormErrorBanner error={apiError} className="mb-6" />
 
       {/* Profile Grid */}
       <div className="profile-grid">
@@ -163,15 +163,23 @@ export default function TenantOrganizationPage() {
             <p>Modify the tenant display name. Route slug remains immutable.</p>
           </div>
 
-          <label className="field">
+          <label className={`field ${apiError?.fieldErrors?.name ? 'field-has-error' : ''}`}>
             <span className="text-[#f7f4e8]">Display Name</span>
             <input
               value={form.name}
-              onChange={(e) => setForm({ name: e.target.value })}
+              onChange={(e) => {
+                setForm({ name: e.target.value })
+                if (apiError?.fieldErrors?.name) {
+                  setApiError(prev => prev ? { ...prev, fieldErrors: { ...prev.fieldErrors, name: '' } } : null)
+                }
+              }}
               placeholder="Organization Name"
               required
               className="bg-white text-ink"
             />
+            {apiError?.fieldErrors?.name && (
+              <span className="field-error-msg">{apiError.fieldErrors.name}</span>
+            )}
           </label>
 
           <label className="field">

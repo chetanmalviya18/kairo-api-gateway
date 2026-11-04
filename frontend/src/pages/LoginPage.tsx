@@ -4,6 +4,7 @@ import { useNavigate, Navigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { setCredentials } from '@/features/auth/authSlice'
 import { login } from '@/features/auth/authApi'
+import { parseApiError } from '@/lib/errorHandler'
 import KairoLogo from '@/components/common/KairoLogo'
 import './LoginPage.css'
 
@@ -21,7 +22,7 @@ export default function LoginPage() {
     return <Navigate to={role === 'PLATFORM_ADMIN' ? '/platform' : '/tenant'} replace />
   }
 
-  const { mutate, isPending, error } = useMutation({
+  const { mutate, isPending, error, reset } = useMutation({
     mutationFn: login,
     onSuccess: (data, variables) => {
       dispatch(
@@ -103,7 +104,10 @@ export default function LoginPage() {
               autoComplete="username"
               placeholder="admin or tenant-admin"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => {
+                setUsername(e.target.value)
+                if (error) reset()
+              }}
               required
               autoFocus
             />
@@ -119,7 +123,10 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 placeholder="Enter password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  if (error) reset()
+                }}
                 required
               />
               <button
@@ -134,8 +141,8 @@ export default function LoginPage() {
           </label>
 
           {error && (
-            <p className="form-error">
-              Invalid credentials. Please verify your username and password.
+            <p className="form-error" role="alert">
+              {parseApiError(error, 'Invalid credentials. Please verify your username and password.').formattedMessage}
             </p>
           )}
 

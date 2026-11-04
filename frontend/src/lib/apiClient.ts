@@ -25,13 +25,20 @@ apiClient.interceptors.request.use((config) => {
   return config
 })
 
-// Handle 401 — clear token and redirect to login
+// Handle 401 — clear token and redirect to login (only for authenticated session requests, not auth/login)
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('kairo_token')
-      window.location.href = '/login'
+      const isLoginRequest = error.config?.url?.includes('/auth/login')
+      const isAlreadyOnLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login'
+
+      if (!isLoginRequest) {
+        localStorage.removeItem('kairo_token')
+        if (!isAlreadyOnLoginPage) {
+          window.location.href = '/login'
+        }
+      }
     }
     return Promise.reject(error)
   }

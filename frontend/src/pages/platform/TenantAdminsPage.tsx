@@ -11,6 +11,8 @@ import {
   type TenantAdminRequest,
 } from '@/features/organizations/organizationApi'
 import { Pencil, Trash2, ToggleLeft, ToggleRight, ArrowLeft, X } from 'lucide-react'
+import { parseApiError, type ParsedApiError } from '@/lib/errorHandler'
+import FormErrorBanner from '@/components/common/FormErrorBanner'
 
 export default function TenantAdminsPage() {
   const { orgId } = useParams<{ orgId: string }>()
@@ -21,7 +23,7 @@ export default function TenantAdminsPage() {
   const [showForm, setShowForm] = useState(false)
   const [isEdit, setIsEdit] = useState(false)
   const [form, setForm] = useState<TenantAdminRequest>({ username: '', password: '', enabled: true })
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [apiError, setApiError] = useState<ParsedApiError | null>(null)
 
   const { data: admin, isLoading, error } = useQuery({
     queryKey: ['tenant-admin', id],
@@ -33,10 +35,10 @@ export default function TenantAdminsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenant-admin', id] })
       setShowForm(false)
-      setErrorMsg(null)
+      setApiError(null)
     },
     onError: (err: any) => {
-      setErrorMsg(err.response?.data?.message || err.message || 'Failed to create tenant admin')
+      setApiError(parseApiError(err, 'Failed to create tenant admin'))
     },
   })
 
@@ -46,10 +48,10 @@ export default function TenantAdminsPage() {
       queryClient.invalidateQueries({ queryKey: ['tenant-admin', id] })
       setShowForm(false)
       setIsEdit(false)
-      setErrorMsg(null)
+      setApiError(null)
     },
     onError: (err: any) => {
-      setErrorMsg(err.response?.data?.message || err.message || 'Failed to update tenant admin')
+      setApiError(parseApiError(err, 'Failed to update tenant admin'))
     },
   })
 
@@ -73,7 +75,7 @@ export default function TenantAdminsPage() {
   const openCreate = () => {
     setIsEdit(false)
     setForm({ username: '', password: '', enabled: true })
-    setErrorMsg(null)
+    setApiError(null)
     setShowForm(true)
   }
 
@@ -81,21 +83,31 @@ export default function TenantAdminsPage() {
     if (!admin) return
     setIsEdit(true)
     setForm({ username: admin.username, password: '', enabled: admin.enabled })
-    setErrorMsg(null)
+    setApiError(null)
     setShowForm(true)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setErrorMsg(null)
+    setApiError(null)
 
     if (!form.username.trim()) {
-      setErrorMsg('Username is required.')
+      setApiError({
+        status: 400,
+        message: 'Validation Failed',
+        fieldErrors: { username: 'Username is required.' },
+        formattedMessage: 'Validation Failed (username: Username is required.)',
+      })
       return
     }
 
     if (!isEdit && (!form.password || form.password.length < 8)) {
-      setErrorMsg('Password must be at least 8 characters.')
+      setApiError({
+        status: 400,
+        message: 'Validation Failed',
+        fieldErrors: { password: 'Password must be at least 8 characters.' },
+        formattedMessage: 'Validation Failed (password: Password must be at least 8 characters.)',
+      })
       return
     }
 
@@ -252,25 +264,33 @@ export default function TenantAdminsPage() {
                   </button>
                 </div>
 
-                {errorMsg && (
-                  <p className="form-error">{errorMsg}</p>
-                )}
+                <FormErrorBanner error={apiError} />
 
                 <div className="form-grid">
-                  <label className="field form-span">
+                  <label className={`field form-span ${apiError?.fieldErrors?.username ? 'field-has-error' : ''}`}>
                     <span>Username</span>
                     <input
                       id="tenantAdminUsername"
                       maxLength={100}
                       placeholder="foodfast-admin"
                       value={form.username}
-                      onChange={(e) => setForm({ ...form, username: e.target.value })}
+                      onChange={(e) => {
+                        setForm({ ...form, username: e.target.value })
+                        if (apiError?.fieldErrors?.username) {
+                          const updated = { ...apiError.fieldErrors }
+                          delete updated.username
+                          setApiError({ ...apiError, fieldErrors: updated })
+                        }
+                      }}
                       required
                       autoFocus
                     />
+                    {apiError?.fieldErrors?.username && (
+                      <span className="field-error-msg">{apiError.fieldErrors.username}</span>
+                    )}
                   </label>
 
-                  <label className="field form-span">
+                  <label className={`field form-span ${apiError?.fieldErrors?.password ? 'field-has-error' : ''}`}>
                     <span>Password</span>
                     <input
                       id="tenantAdminPassword"
@@ -278,9 +298,19 @@ export default function TenantAdminsPage() {
                       maxLength={100}
                       placeholder={isEdit ? 'Leave blank to keep existing password' : 'Minimum 8 characters'}
                       value={form.password}
-                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      onChange={(e) => {
+                        setForm({ ...form, password: e.target.value })
+                        if (apiError?.fieldErrors?.password) {
+                          const updated = { ...apiError.fieldErrors }
+                          delete updated.password
+                          setApiError({ ...apiError, fieldErrors: updated })
+                        }
+                      }}
                       required={!isEdit}
                     />
+                    {apiError?.fieldErrors?.password && (
+                      <span className="field-error-msg">{apiError.fieldErrors.password}</span>
+                    )}
                   </label>
 
                   <label className="switch-row form-span">

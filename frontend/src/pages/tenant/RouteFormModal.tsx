@@ -8,7 +8,9 @@ import {
   type RouteRequest,
   type HeaderRuleRequest,
 } from '@/features/routes/routeApi'
-import { Plus, Trash2, X, AlertCircle } from 'lucide-react'
+import { Plus, Trash2, X } from 'lucide-react'
+import { parseApiError, type ParsedApiError } from '@/lib/errorHandler'
+import FormErrorBanner from '@/components/common/FormErrorBanner'
 
 interface Props {
   isOpen: boolean
@@ -45,7 +47,7 @@ export default function RouteFormModal({
   const [active, setActive] = useState(true)
   const [allowedMethods, setAllowedMethods] = useState<string[]>(['GET'])
   const [headerRules, setHeaderRules] = useState<HeaderRuleRequest[]>([])
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [apiError, setApiError] = useState<ParsedApiError | null>(null)
 
   useEffect(() => {
     if (activeRoute) {
@@ -81,7 +83,7 @@ export default function RouteFormModal({
       setAllowedMethods(['GET'])
       setHeaderRules([])
     }
-    setErrorMessage(null)
+    setApiError(null)
   }, [activeRoute, activeSlug, isOpen])
 
   const createMutation = useMutation({
@@ -92,7 +94,7 @@ export default function RouteFormModal({
       onClose()
     },
     onError: (err: any) => {
-      setErrorMessage(err.response?.data?.message || err.message || 'Failed to create route')
+      setApiError(parseApiError(err, 'Failed to create route'))
     },
   })
 
@@ -105,7 +107,7 @@ export default function RouteFormModal({
       onClose()
     },
     onError: (err: any) => {
-      setErrorMessage(err.response?.data?.message || err.message || 'Failed to update route')
+      setApiError(parseApiError(err, 'Failed to update route'))
     },
   })
 
@@ -139,36 +141,66 @@ export default function RouteFormModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setErrorMessage(null)
+    setApiError(null)
 
     if (tenantSlug && !pathPattern.startsWith(`/${tenantSlug}/`)) {
-      setErrorMessage(`Path Pattern must start with /${tenantSlug}/`)
+      setApiError({
+        status: 400,
+        message: 'Validation Failed',
+        fieldErrors: { pathPattern: `Path Pattern must start with /${tenantSlug}/` },
+        formattedMessage: `Validation Failed (pathPattern: Must start with /${tenantSlug}/)`,
+      })
       return
     }
 
     if (!targetPathPrefix.startsWith('/')) {
-      setErrorMessage('Target Path Prefix must start with /')
+      setApiError({
+        status: 400,
+        message: 'Validation Failed',
+        fieldErrors: { targetPathPrefix: 'Target Path Prefix must start with /' },
+        formattedMessage: 'Validation Failed (targetPathPrefix: Must start with /)',
+      })
       return
     }
 
     try {
       const url = new URL(targetBaseUrl)
       if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-        setErrorMessage('Target Base URL must start with http:// or https://')
+        setApiError({
+          status: 400,
+          message: 'Validation Failed',
+          fieldErrors: { targetBaseUrl: 'Target Base URL must start with http:// or https://' },
+          formattedMessage: 'Validation Failed (targetBaseUrl: Must start with http:// or https://)',
+        })
         return
       }
     } catch {
-      setErrorMessage('Target Base URL is not a valid URL (e.g. http://localhost:8080)')
+      setApiError({
+        status: 400,
+        message: 'Validation Failed',
+        fieldErrors: { targetBaseUrl: 'Target Base URL is not a valid URL (e.g. http://localhost:8080)' },
+        formattedMessage: 'Validation Failed (targetBaseUrl: Invalid URL)',
+      })
       return
     }
 
     for (const rule of headerRules) {
       if (!rule.headerName.trim()) {
-        setErrorMessage('Header Rule: Header name is required.')
+        setApiError({
+          status: 400,
+          message: 'Validation Failed',
+          fieldErrors: { headerRules: 'Header Rule: Header name is required.' },
+          formattedMessage: 'Validation Failed (headerRules: Header name is required.)',
+        })
         return
       }
       if (rule.action === 'ADD' && (!rule.headerValue || !rule.headerValue.trim())) {
-        setErrorMessage('Header Rule: ADD action requires a header value.')
+        setApiError({
+          status: 400,
+          message: 'Validation Failed',
+          fieldErrors: { headerRules: 'Header Rule: ADD action requires a header value.' },
+          formattedMessage: 'Validation Failed (headerRules: ADD action requires a header value.)',
+        })
         return
       }
     }
@@ -221,12 +253,7 @@ export default function RouteFormModal({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5 bg-white">
-          {errorMessage && (
-            <div className="flex items-center gap-2 p-3 text-xs bg-destructive/10 border border-destructive/20 text-destructive rounded-lg">
-              <AlertCircle size={16} />
-              <span>{errorMessage}</span>
-            </div>
-          )}
+          <FormErrorBanner error={apiError} className="mb-4" />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -237,14 +264,27 @@ export default function RouteFormModal({
                 type="text"
                 value={routeId}
                 disabled={isEdit}
-                onChange={(e) => setRouteId(e.target.value)}
+                onChange={(e) => {
+                  setRouteId(e.target.value)
+                  if (apiError?.fieldErrors?.routeId) {
+                    setApiError(prev => prev ? { ...prev, fieldErrors: { ...prev.fieldErrors, routeId: '' } } : null)
+                  }
+                }}
                 placeholder="e.g. users-service"
                 required
-                className="w-full border border-kairo-cream-border rounded-lg px-3 py-2 text-sm bg-kairo-cream/30 font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green disabled:opacity-60"
+                className={`w-full border rounded-lg px-3 py-2 text-sm bg-kairo-cream/30 font-mono focus:bg-white focus:outline-none focus:ring-2 disabled:opacity-60 ${
+                  apiError?.fieldErrors?.routeId
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-kairo-cream-border focus:ring-kairo-green'
+                }`}
               />
-              <p className="text-[10px] text-muted-foreground mt-0.5">
-                {isEdit ? 'Immutable route identifier.' : 'Unique identifier for this route.'}
-              </p>
+              {apiError?.fieldErrors?.routeId ? (
+                <p className="text-[11px] text-red-600 font-medium mt-1">{apiError.fieldErrors.routeId}</p>
+              ) : (
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  {isEdit ? 'Immutable route identifier.' : 'Unique identifier for this route.'}
+                </p>
+              )}
             </div>
 
             <div>
@@ -254,11 +294,23 @@ export default function RouteFormModal({
               <input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  if (apiError?.fieldErrors?.name) {
+                    setApiError(prev => prev ? { ...prev, fieldErrors: { ...prev.fieldErrors, name: '' } } : null)
+                  }
+                }}
                 placeholder="e.g. Users API Service"
                 required
-                className="w-full border border-kairo-cream-border rounded-lg px-3 py-2 text-sm bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green"
+                className={`w-full border rounded-lg px-3 py-2 text-sm bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 ${
+                  apiError?.fieldErrors?.name
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-kairo-cream-border focus:ring-kairo-green'
+                }`}
               />
+              {apiError?.fieldErrors?.name && (
+                <p className="text-[11px] text-red-600 font-medium mt-1">{apiError.fieldErrors.name}</p>
+              )}
             </div>
           </div>
 
@@ -270,14 +322,27 @@ export default function RouteFormModal({
               <input
                 type="text"
                 value={pathPattern}
-                onChange={(e) => setPathPattern(e.target.value)}
+                onChange={(e) => {
+                  setPathPattern(e.target.value)
+                  if (apiError?.fieldErrors?.pathPattern) {
+                    setApiError(prev => prev ? { ...prev, fieldErrors: { ...prev.fieldErrors, pathPattern: '' } } : null)
+                  }
+                }}
                 placeholder={tenantSlug ? `/${tenantSlug}/users/**` : '/users/**'}
                 required
-                className="w-full border border-kairo-cream-border rounded-lg px-3 py-2 text-sm font-mono bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green"
+                className={`w-full border rounded-lg px-3 py-2 text-sm font-mono bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 ${
+                  apiError?.fieldErrors?.pathPattern
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-kairo-cream-border focus:ring-kairo-green'
+                }`}
               />
-              <p className="text-[10px] text-muted-foreground mt-0.5">
-                {tenantSlug && `Must start with /${tenantSlug}/`}
-              </p>
+              {apiError?.fieldErrors?.pathPattern ? (
+                <p className="text-[11px] text-red-600 font-medium mt-1">{apiError.fieldErrors.pathPattern}</p>
+              ) : (
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  {tenantSlug && `Must start with /${tenantSlug}/`}
+                </p>
+              )}
             </div>
 
             <div>
@@ -287,11 +352,23 @@ export default function RouteFormModal({
               <input
                 type="text"
                 value={targetPathPrefix}
-                onChange={(e) => setTargetPathPrefix(e.target.value)}
+                onChange={(e) => {
+                  setTargetPathPrefix(e.target.value)
+                  if (apiError?.fieldErrors?.targetPathPrefix) {
+                    setApiError(prev => prev ? { ...prev, fieldErrors: { ...prev.fieldErrors, targetPathPrefix: '' } } : null)
+                  }
+                }}
                 placeholder="/api/v1"
                 required
-                className="w-full border border-kairo-cream-border rounded-lg px-3 py-2 text-sm font-mono bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green"
+                className={`w-full border rounded-lg px-3 py-2 text-sm font-mono bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 ${
+                  apiError?.fieldErrors?.targetPathPrefix
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-kairo-cream-border focus:ring-kairo-green'
+                }`}
               />
+              {apiError?.fieldErrors?.targetPathPrefix && (
+                <p className="text-[11px] text-red-600 font-medium mt-1">{apiError.fieldErrors.targetPathPrefix}</p>
+              )}
             </div>
           </div>
 
@@ -302,11 +379,23 @@ export default function RouteFormModal({
             <input
               type="text"
               value={targetBaseUrl}
-              onChange={(e) => setTargetBaseUrl(e.target.value)}
+              onChange={(e) => {
+                setTargetBaseUrl(e.target.value)
+                if (apiError?.fieldErrors?.targetBaseUrl) {
+                  setApiError(prev => prev ? { ...prev, fieldErrors: { ...prev.fieldErrors, targetBaseUrl: '' } } : null)
+                }
+              }}
               placeholder="http://users-service:8080"
               required
-              className="w-full border border-kairo-cream-border rounded-lg px-3 py-2 text-sm font-mono bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-kairo-green"
+              className={`w-full border rounded-lg px-3 py-2 text-sm font-mono bg-kairo-cream/30 focus:bg-white focus:outline-none focus:ring-2 ${
+                apiError?.fieldErrors?.targetBaseUrl
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-kairo-cream-border focus:ring-kairo-green'
+              }`}
             />
+            {apiError?.fieldErrors?.targetBaseUrl && (
+              <p className="text-[11px] text-red-600 font-medium mt-1">{apiError.fieldErrors.targetBaseUrl}</p>
+            )}
           </div>
 
           {/* Allowed HTTP Methods */}

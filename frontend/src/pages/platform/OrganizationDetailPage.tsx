@@ -12,12 +12,13 @@ import {
 import {
   ArrowLeft,
   CheckCircle2,
-  AlertCircle,
   Trash2,
   Users,
   ToggleLeft,
   ToggleRight,
 } from 'lucide-react'
+import { parseApiError, type ParsedApiError } from '@/lib/errorHandler'
+import FormErrorBanner from '@/components/common/FormErrorBanner'
 
 export default function OrganizationDetailPage() {
   const { orgId } = useParams<{ orgId: string }>()
@@ -27,7 +28,7 @@ export default function OrganizationDetailPage() {
 
   const [form, setForm] = useState<OrganizationRequest>({ name: '', slug: '' })
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [apiError, setApiError] = useState<ParsedApiError | null>(null)
 
   const {
     data: organization,
@@ -51,12 +52,10 @@ export default function OrganizationDetailPage() {
       queryClient.setQueryData(['organization', id], updated)
       queryClient.invalidateQueries({ queryKey: ['organizations'] })
       setSuccessMessage('Organization updated successfully.')
-      setErrorMessage(null)
+      setApiError(null)
     },
     onError: (err: any) => {
-      setErrorMessage(
-        err.response?.data?.message || err.message || 'Failed to update organization'
-      )
+      setApiError(parseApiError(err, 'Failed to update organization'))
       setSuccessMessage(null)
     },
   })
@@ -67,6 +66,11 @@ export default function OrganizationDetailPage() {
       queryClient.setQueryData(['organization', id], updated)
       queryClient.invalidateQueries({ queryKey: ['organizations'] })
       setSuccessMessage(`Status updated to ${updated.status}.`)
+      setApiError(null)
+    },
+    onError: (err: any) => {
+      setApiError(parseApiError(err, 'Failed to update organization status'))
+      setSuccessMessage(null)
     },
   })
 
@@ -77,22 +81,23 @@ export default function OrganizationDetailPage() {
       navigate('/platform/organizations')
     },
     onError: (err: any) => {
-      setErrorMessage(
-        err.response?.data?.message || err.message || 'Failed to delete organization'
-      )
+      setApiError(parseApiError(err, 'Failed to delete organization'))
     },
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setErrorMessage(null)
+    setApiError(null)
     setSuccessMessage(null)
 
     const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
     if (!slugRegex.test(form.slug)) {
-      setErrorMessage(
-        'Invalid slug: must contain only lowercase letters, numbers, and single hyphens without leading or trailing hyphens.'
-      )
+      setApiError({
+        status: 400,
+        message: 'Validation Failed',
+        fieldErrors: { slug: 'Invalid slug: must contain only lowercase letters, numbers, and single hyphens without leading or trailing hyphens.' },
+        formattedMessage: 'Invalid slug: must contain only lowercase letters, numbers, and single hyphens.'
+      })
       return
     }
 
@@ -131,7 +136,7 @@ export default function OrganizationDetailPage() {
         <div className="p-6 bg-white border border-red-200 text-red-700 rounded-xl">
           <p className="font-semibold text-sm">Organization not found</p>
           <p className="text-xs mt-1">
-            {(error as any)?.response?.data?.message || 'Could not fetch organization with ID ' + id}
+            {parseApiError(error, 'Could not fetch organization with ID ' + id).formattedMessage}
           </p>
         </div>
       </div>
@@ -182,12 +187,7 @@ export default function OrganizationDetailPage() {
         </div>
       )}
 
-      {errorMessage && (
-        <div className="flex items-center gap-2 p-3.5 mb-6 text-xs font-medium bg-red-50 border border-red-200 text-red-700 rounded-xl">
-          <AlertCircle size={16} />
-          <span>{errorMessage}</span>
-        </div>
-      )}
+      <FormErrorBanner error={apiError} className="mb-6" />
 
       {/* Profile Grid */}
       <div className="profile-grid">
@@ -267,26 +267,42 @@ export default function OrganizationDetailPage() {
             <p>Update tenant display name and custom route prefix slug.</p>
           </div>
 
-          <label className="field">
+          <label className={`field ${apiError?.fieldErrors?.name ? 'field-has-error' : ''}`}>
             <span className="text-[#f7f4e8]">Organization Name</span>
             <input
               value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              onChange={(e) => {
+                setForm({ ...form, name: e.target.value })
+                if (apiError?.fieldErrors?.name) {
+                  setApiError(prev => prev ? { ...prev, fieldErrors: { ...prev.fieldErrors, name: '' } } : null)
+                }
+              }}
               placeholder="e.g. FoodFast Corporation"
               required
               className="bg-white text-ink"
             />
+            {apiError?.fieldErrors?.name && (
+              <span className="field-error-msg">{apiError.fieldErrors.name}</span>
+            )}
           </label>
 
-          <label className="field">
+          <label className={`field ${apiError?.fieldErrors?.slug ? 'field-has-error' : ''}`}>
             <span className="text-[#f7f4e8]">Route Slug</span>
             <input
               value={form.slug}
-              onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase() })}
+              onChange={(e) => {
+                setForm({ ...form, slug: e.target.value.toLowerCase() })
+                if (apiError?.fieldErrors?.slug) {
+                  setApiError(prev => prev ? { ...prev, fieldErrors: { ...prev.fieldErrors, slug: '' } } : null)
+                }
+              }}
               placeholder="e.g. foodfast"
               required
               className="bg-white text-ink font-mono text-xs"
             />
+            {apiError?.fieldErrors?.slug && (
+              <span className="field-error-msg">{apiError.fieldErrors.slug}</span>
+            )}
           </label>
 
           <button
