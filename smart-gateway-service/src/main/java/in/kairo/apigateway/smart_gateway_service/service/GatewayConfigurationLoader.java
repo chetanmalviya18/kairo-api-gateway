@@ -19,6 +19,14 @@ public class GatewayConfigurationLoader implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        refresh();
+    }
+
+    public void refresh() {
         List<GatewayRoute> routes = managementApiClient.fetchActiveRoutes();
+
+        for (GatewayRoute route : routes) {
+            System.out.println("Route: " + route.getTargetPathPrefix());
+        }
     }
 }
