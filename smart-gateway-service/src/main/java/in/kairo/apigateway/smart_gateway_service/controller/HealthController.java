@@ -1,6 +1,6 @@
 package in.kairo.apigateway.smart_gateway_service.controller;
 
-import in.kairo.apigateway.smart_gateway_service.responseDto.HealthResponse;
+import in.kairo.apigateway.smart_gateway_service.dto.responseDto.HealthResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
